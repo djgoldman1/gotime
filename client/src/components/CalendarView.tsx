@@ -59,6 +59,29 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
     return date.toDateString() === today.toDateString();
   };
 
+  const isSameDay = (date1: Date, date2: Date) => {
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+  };
+
+  const parseEventDate = (eventDateStr: string): Date | null => {
+    try {
+      // Event date format: "Oct 22, 2025 · 7:00 PM"
+      const datePart = eventDateStr.split(' · ')[0];
+      return new Date(datePart);
+    } catch {
+      return null;
+    }
+  };
+
+  const getEventsForDate = (date: Date) => {
+    return events.filter(event => {
+      const eventDate = parseEventDate(event.date);
+      return eventDate && isSameDay(date, eventDate);
+    });
+  };
+
   const weekDates = getWeekDates();
 
   return (
@@ -105,9 +128,7 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
       {viewMode === "week" && (
         <div className="grid grid-cols-7 gap-2">
           {weekDates.map((date, index) => {
-            const dayEvents = events.filter(e => 
-              Math.random() > 0.7
-            );
+            const dayEvents = getEventsForDate(date);
             const today = isToday(date);
 
             return (
@@ -178,7 +199,7 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
             </div>
           </div>
           <div className="p-4 space-y-3">
-            {events.slice(0, 5).map((event) => (
+            {getEventsForDate(currentDate).map((event) => (
               <Popover key={event.id}>
                 <PopoverTrigger asChild>
                   <div
@@ -239,14 +260,24 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
                 </div>
               ))}
               {Array.from({ length: 35 }).map((_, index) => {
-                const dayEventsForMonth = events.filter(e => Math.random() > 0.7);
+                // Calculate the actual date for this calendar cell
+                const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                const startDayOfWeek = firstDayOfMonth.getDay();
+                const cellDate = new Date(firstDayOfMonth);
+                cellDate.setDate(cellDate.getDate() - startDayOfWeek + index);
+                
+                const dayEventsForMonth = getEventsForDate(cellDate);
+                const isCurrentMonth = cellDate.getMonth() === currentDate.getMonth();
+                
                 return (
                   <div
                     key={index}
-                    className="aspect-square border rounded-md p-2 hover-elevate active-elevate-2 cursor-pointer"
+                    className={`aspect-square border rounded-md p-2 hover-elevate active-elevate-2 cursor-pointer ${
+                      !isCurrentMonth ? "opacity-40" : ""
+                    }`}
                     data-testid={`calendar-month-day-${index}`}
                   >
-                    <div className="text-sm font-medium mb-1">{(index % 30) + 1}</div>
+                    <div className="text-sm font-medium mb-1">{cellDate.getDate()}</div>
                     {dayEventsForMonth.length > 0 && (
                       <div className="flex flex-wrap gap-0.5">
                         {dayEventsForMonth.slice(0, 4).map((event, idx) => (
