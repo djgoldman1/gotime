@@ -14,7 +14,7 @@ export default function Welcome({ onGetStarted }: WelcomeProps) {
             <Calendar className="h-20 w-20 text-primary" />
           </div>
           <h1 className="text-5xl md:text-6xl font-bold">
-            Welcome to Anthem
+            Welcome to GoTime
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Your intelligent event discovery platform for Chicago. Get personalized recommendations for sporting events, concerts, and entertainment based on your preferences.

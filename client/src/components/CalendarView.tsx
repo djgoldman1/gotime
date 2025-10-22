@@ -239,18 +239,29 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
                 </div>
               ))}
               {Array.from({ length: 35 }).map((_, index) => {
-                const hasEvents = Math.random() > 0.7;
+                const dayEventsForMonth = events.filter(e => Math.random() > 0.7);
                 return (
                   <div
                     key={index}
                     className="aspect-square border rounded-md p-2 hover-elevate active-elevate-2 cursor-pointer"
                     data-testid={`calendar-month-day-${index}`}
                   >
-                    <div className="text-sm font-medium">{(index % 30) + 1}</div>
-                    {hasEvents && (
-                      <div className="flex gap-1 mt-1">
-                        <div className="w-2 h-2 rounded-full bg-sports"></div>
-                        <div className="w-2 h-2 rounded-full bg-music"></div>
+                    <div className="text-sm font-medium mb-1">{(index % 30) + 1}</div>
+                    {dayEventsForMonth.length > 0 && (
+                      <div className="flex flex-wrap gap-0.5">
+                        {dayEventsForMonth.slice(0, 4).map((event, idx) => (
+                          <div key={idx} className="relative group">
+                            {event.logo ? (
+                              <img 
+                                src={event.logo} 
+                                alt="" 
+                                className="w-3 h-3 rounded object-cover"
+                              />
+                            ) : (
+                              <Music2 className="w-3 h-3 text-music" />
+                            )}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
