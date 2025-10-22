@@ -205,45 +205,72 @@ export class TicketmasterAPI {
     return this.searchEvents({ classificationName: "Music" });
   }
 
+  async getAllChicagoEvents(): Promise<Event[]> {
+    // Fetch all sports and music events in Chicago
+    const sportsEvents = await this.searchEvents({ 
+      classificationName: "Sports",
+      size: 200 
+    });
+    
+    await this.delay(300);
+    
+    const musicEvents = await this.searchEvents({ 
+      classificationName: "Music",
+      size: 200 
+    });
+
+    const allEvents = [...sportsEvents, ...musicEvents];
+    
+    // Remove duplicates
+    const uniqueEvents = allEvents.filter((event, index, self) =>
+      index === self.findIndex(e => e.id === event.id)
+    );
+
+    console.log(`Total Chicago events fetched: ${uniqueEvents.length}`);
+    return uniqueEvents;
+  }
+
   async getRecommendedEvents(preferences: {
     teams?: string[];
     artists?: string[];
     venues?: string[];
   }): Promise<Event[]> {
-    const sportsEvents = await this.getSportsEvents(preferences.teams);
+    // Get all Chicago events
+    const allEvents = await this.getAllChicagoEvents();
     
-    await this.delay(200);
-    
-    const musicEvents = await this.getMusicEvents(preferences.artists);
-
-    const allEvents = [...sportsEvents, ...musicEvents];
-    
-    // Filter to only show events within the next 6 months
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const sixMonthsFromNow = new Date(today);
-    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
-    
-    const filteredByDate = allEvents.filter(event => {
-      // Parse the date from the formatted event
-      const eventDateStr = event.date.split(' · ')[0]; // e.g., "Oct 22, 2025"
-      const eventDate = new Date(eventDateStr);
-      return eventDate >= today && eventDate <= sixMonthsFromNow;
-    });
-    
-    const uniqueEvents = filteredByDate.filter((event, index, self) =>
-      index === self.findIndex(e => e.id === event.id)
-    );
-
-    if (preferences.venues && preferences.venues.length > 0) {
-      return uniqueEvents.filter(event => 
-        preferences.venues!.some(venue => 
-          event.venue.toLowerCase().includes(venue.toLowerCase())
-        )
-      );
+    // If no preferences, return all events
+    if ((!preferences.teams || preferences.teams.length === 0) &&
+        (!preferences.artists || preferences.artists.length === 0) &&
+        (!preferences.venues || preferences.venues.length === 0)) {
+      return allEvents;
     }
 
-    return uniqueEvents;
+    // Filter events based on user preferences
+    const filteredEvents = allEvents.filter(event => {
+      const eventTitle = event.title.toLowerCase();
+      const eventVenue = event.venue.toLowerCase();
+      
+      // Check if event matches any team preference
+      const matchesTeam = preferences.teams?.some(team => 
+        eventTitle.includes(team.toLowerCase())
+      ) || false;
+      
+      // Check if event matches any artist preference
+      const matchesArtist = preferences.artists?.some(artist => 
+        eventTitle.includes(artist.toLowerCase())
+      ) || false;
+      
+      // Check if event matches any venue preference
+      const matchesVenue = preferences.venues?.some(venue => 
+        eventVenue.includes(venue.toLowerCase())
+      ) || false;
+      
+      // Return true if matches any preference
+      return matchesTeam || matchesArtist || matchesVenue;
+    });
+
+    console.log(`Filtered to ${filteredEvents.length} events based on preferences`);
+    return filteredEvents;
   }
 }
 
