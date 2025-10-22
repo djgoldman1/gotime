@@ -107,10 +107,23 @@ export class TicketmasterAPI {
     endDateTime?: string;
     size?: number;
   }): Promise<Event[]> {
+    // Default date range: today to 6 months from now
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const sixMonthsFromNow = new Date(today);
+    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+    
+    const startDateTime = params.startDateTime || today.toISOString();
+    const endDateTime = params.endDateTime || sixMonthsFromNow.toISOString();
+    
     const queryParams = new URLSearchParams({
       apikey: this.apiKey,
       dmaId: CHICAGO_DMA_ID,
       size: (params.size || 50).toString(),
+      startDateTime,
+      endDateTime,
+      sort: "date,asc",
     });
 
     if (params.keyword) {
@@ -119,14 +132,6 @@ export class TicketmasterAPI {
 
     if (params.classificationName) {
       queryParams.append("classificationName", params.classificationName);
-    }
-
-    if (params.startDateTime) {
-      queryParams.append("startDateTime", params.startDateTime);
-    }
-
-    if (params.endDateTime) {
-      queryParams.append("endDateTime", params.endDateTime);
     }
 
     const url = `${TICKETMASTER_API_URL}/events.json?${queryParams}`;
@@ -142,7 +147,16 @@ export class TicketmasterAPI {
       const data: TicketmasterResponse = await response.json();
       
       if (!data._embedded?.events) {
+        console.log(`No events found for query: ${params.keyword || params.classificationName}`);
         return [];
+      }
+
+      console.log(`Found ${data._embedded.events.length} events for query: ${params.keyword || params.classificationName}`);
+      
+      // Log first event for debugging
+      if (data._embedded.events.length > 0) {
+        const firstEvent = data._embedded.events[0];
+        console.log(`Sample event: ${firstEvent.name}, Date: ${firstEvent.dates.start.localDate}, Venue: ${firstEvent._embedded?.venues?.[0]?.name}`);
       }
 
       return data._embedded.events.map(event => this.formatEvent(event));
