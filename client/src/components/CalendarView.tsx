@@ -272,26 +272,54 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
                 return (
                   <div
                     key={index}
-                    className={`aspect-square border rounded-md p-2 hover-elevate active-elevate-2 cursor-pointer ${
+                    className={`aspect-square border rounded-md p-2 ${
                       !isCurrentMonth ? "opacity-40" : ""
                     }`}
                     data-testid={`calendar-month-day-${index}`}
                   >
-                    <div className="text-sm font-medium mb-1">{cellDate.getDate()}</div>
+                    <div 
+                      className="text-sm font-medium mb-1 cursor-pointer hover:text-primary"
+                      onClick={() => {
+                        setCurrentDate(new Date(cellDate));
+                        setViewMode("day");
+                      }}
+                    >
+                      {cellDate.getDate()}
+                    </div>
                     {dayEventsForMonth.length > 0 && (
-                      <div className="flex flex-wrap gap-0.5">
-                        {dayEventsForMonth.slice(0, 4).map((event, idx) => (
-                          <div key={idx} className="relative group">
-                            {event.logo ? (
-                              <img 
-                                src={event.logo} 
-                                alt="" 
-                                className="w-3 h-3 rounded object-cover"
+                      <div className="flex flex-wrap gap-1">
+                        {dayEventsForMonth.slice(0, 6).map((event) => (
+                          <Popover key={event.id}>
+                            <PopoverTrigger asChild>
+                              <div 
+                                className="relative group cursor-pointer hover-elevate active-elevate-2 rounded"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEventClick?.(event.id);
+                                }}
+                              >
+                                {event.logo ? (
+                                  <img 
+                                    src={event.logo} 
+                                    alt="" 
+                                    className="w-6 h-6 rounded object-cover"
+                                  />
+                                ) : (
+                                  <Music2 className="w-6 h-6 text-music" />
+                                )}
+                              </div>
+                            </PopoverTrigger>
+                            <PopoverContent side="right" align="start" className="p-0 w-auto">
+                              <EventPreviewCard
+                                title={event.title}
+                                date={event.date}
+                                venue={event.venue}
+                                price={event.price}
+                                category={event.category}
+                                logo={event.logo}
                               />
-                            ) : (
-                              <Music2 className="w-3 h-3 text-music" />
-                            )}
-                          </div>
+                            </PopoverContent>
+                          </Popover>
                         ))}
                       </div>
                     )}
