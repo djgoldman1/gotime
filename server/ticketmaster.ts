@@ -107,24 +107,21 @@ export class TicketmasterAPI {
     endDateTime?: string;
     size?: number;
   }): Promise<Event[]> {
-    // Default date range: today to 6 months from now
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const sixMonthsFromNow = new Date(today);
-    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
-    
-    const startDateTime = params.startDateTime || today.toISOString();
-    const endDateTime = params.endDateTime || sixMonthsFromNow.toISOString();
-    
     const queryParams = new URLSearchParams({
       apikey: this.apiKey,
       dmaId: CHICAGO_DMA_ID,
       size: (params.size || 50).toString(),
-      startDateTime,
-      endDateTime,
       sort: "date,asc",
     });
+    
+    // Add date range if specified
+    if (params.startDateTime) {
+      queryParams.append("startDateTime", params.startDateTime);
+    }
+    
+    if (params.endDateTime) {
+      queryParams.append("endDateTime", params.endDateTime);
+    }
 
     if (params.keyword) {
       queryParams.append("keyword", params.keyword);
@@ -221,7 +218,20 @@ export class TicketmasterAPI {
 
     const allEvents = [...sportsEvents, ...musicEvents];
     
-    const uniqueEvents = allEvents.filter((event, index, self) =>
+    // Filter to only show events within the next 6 months
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sixMonthsFromNow = new Date(today);
+    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+    
+    const filteredByDate = allEvents.filter(event => {
+      // Parse the date from the formatted event
+      const eventDateStr = event.date.split(' · ')[0]; // e.g., "Oct 22, 2025"
+      const eventDate = new Date(eventDateStr);
+      return eventDate >= today && eventDate <= sixMonthsFromNow;
+    });
+    
+    const uniqueEvents = filteredByDate.filter((event, index, self) =>
       index === self.findIndex(e => e.id === event.id)
     );
 
