@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Music2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import EventPreviewCard from "./EventPreviewCard";
 
 type ViewMode = "day" | "week" | "month";
 
@@ -9,7 +15,11 @@ interface CalendarEvent {
   id: string;
   title: string;
   time: string;
+  date: string;
+  venue: string;
+  price?: string;
   category: "sports" | "music";
+  logo?: string;
 }
 
 interface CalendarViewProps {
@@ -118,17 +128,37 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
                 </div>
                 <div className="space-y-2">
                   {dayEvents.slice(0, 3).map((event) => (
-                    <div
-                      key={event.id}
-                      className={`p-2 rounded-md text-xs cursor-pointer hover-elevate active-elevate-2 ${
-                        event.category === "sports" ? "bg-sports/10 border-l-2 border-l-sports" : "bg-music/10 border-l-2 border-l-music"
-                      }`}
-                      onClick={() => onEventClick?.(event.id)}
-                      data-testid={`calendar-event-${event.id}`}
-                    >
-                      <div className="font-medium line-clamp-2">{event.title}</div>
-                      <div className="text-muted-foreground mt-1">{event.time}</div>
-                    </div>
+                    <Popover key={event.id}>
+                      <PopoverTrigger asChild>
+                        <div
+                          className={`p-2 rounded-md text-xs cursor-pointer hover-elevate active-elevate-2 ${
+                            event.category === "sports" ? "bg-sports/10 border-l-2 border-l-sports" : "bg-music/10 border-l-2 border-l-music"
+                          }`}
+                          onClick={() => onEventClick?.(event.id)}
+                          data-testid={`calendar-event-${event.id}`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            {event.logo ? (
+                              <img src={event.logo} alt="" className="w-4 h-4 rounded object-cover shrink-0" />
+                            ) : (
+                              <Music2 className="w-4 h-4 shrink-0" />
+                            )}
+                            <div className="font-medium line-clamp-2 flex-1">{event.title}</div>
+                          </div>
+                          <div className="text-muted-foreground">{event.time}</div>
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent side="right" align="start" className="p-0 w-auto">
+                        <EventPreviewCard
+                          title={event.title}
+                          date={event.date}
+                          venue={event.venue}
+                          price={event.price}
+                          category={event.category}
+                          logo={event.logo}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   ))}
                 </div>
               </div>
@@ -149,54 +179,84 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
           </div>
           <div className="p-4 space-y-3">
             {events.slice(0, 5).map((event) => (
-              <div
-                key={event.id}
-                className="p-4 border rounded-lg hover-elevate active-elevate-2 cursor-pointer"
-                onClick={() => onEventClick?.(event.id)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="text-sm font-medium text-muted-foreground min-w-[80px]">
-                    {event.time}
+              <Popover key={event.id}>
+                <PopoverTrigger asChild>
+                  <div
+                    className="p-4 border rounded-lg hover-elevate active-elevate-2 cursor-pointer"
+                    onClick={() => onEventClick?.(event.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm font-medium text-muted-foreground min-w-[80px]">
+                        {event.time}
+                      </div>
+                      {event.logo ? (
+                        <img src={event.logo} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+                      ) : (
+                        <Music2 className="w-8 h-8 shrink-0 text-music" />
+                      )}
+                      <div className="flex-1">
+                        <div className="font-semibold">{event.title}</div>
+                      </div>
+                      <Badge variant="secondary" className="uppercase text-xs">
+                        {event.category}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="font-semibold">{event.title}</div>
-                  </div>
-                  <Badge variant="secondary" className="uppercase text-xs">
-                    {event.category}
-                  </Badge>
-                </div>
-              </div>
+                </PopoverTrigger>
+                <PopoverContent side="right" align="start" className="p-0 w-auto">
+                  <EventPreviewCard
+                    title={event.title}
+                    date={event.date}
+                    venue={event.venue}
+                    price={event.price}
+                    category={event.category}
+                    logo={event.logo}
+                  />
+                </PopoverContent>
+              </Popover>
             ))}
           </div>
         </div>
       )}
 
       {viewMode === "month" && (
-        <div className="border rounded-lg p-4">
-          <div className="grid grid-cols-7 gap-2">
-            {weekDays.map((day) => (
-              <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
-                {day}
-              </div>
-            ))}
-            {Array.from({ length: 35 }).map((_, index) => {
-              const hasEvents = Math.random() > 0.7;
-              return (
-                <div
-                  key={index}
-                  className="aspect-square border rounded-md p-2 hover-elevate active-elevate-2 cursor-pointer"
-                  data-testid={`calendar-month-day-${index}`}
-                >
-                  <div className="text-sm font-medium">{(index % 30) + 1}</div>
-                  {hasEvents && (
-                    <div className="flex gap-1 mt-1">
-                      <div className="w-2 h-2 rounded-full bg-sports"></div>
-                      <div className="w-2 h-2 rounded-full bg-music"></div>
-                    </div>
-                  )}
+        <div className="space-y-4">
+          <div className="flex items-center gap-4 px-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-sports"></div>
+              <span className="text-sm text-muted-foreground">Sports</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-music"></div>
+              <span className="text-sm text-muted-foreground">Music</span>
+            </div>
+          </div>
+          <div className="border rounded-lg p-4">
+            <div className="grid grid-cols-7 gap-2">
+              {weekDays.map((day) => (
+                <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
+                  {day}
                 </div>
-              );
-            })}
+              ))}
+              {Array.from({ length: 35 }).map((_, index) => {
+                const hasEvents = Math.random() > 0.7;
+                return (
+                  <div
+                    key={index}
+                    className="aspect-square border rounded-md p-2 hover-elevate active-elevate-2 cursor-pointer"
+                    data-testid={`calendar-month-day-${index}`}
+                  >
+                    <div className="text-sm font-medium">{(index % 30) + 1}</div>
+                    {hasEvents && (
+                      <div className="flex gap-1 mt-1">
+                        <div className="w-2 h-2 rounded-full bg-sports"></div>
+                        <div className="w-2 h-2 rounded-full bg-music"></div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

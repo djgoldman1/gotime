@@ -3,7 +3,6 @@ import Header from "@/components/Header";
 import CalendarView from "@/components/CalendarView";
 import EventCard from "@/components/EventCard";
 import EventDetailModal from "@/components/EventDetailModal";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import bearsLogo from '@assets/generated_images/Chicago_Bears_team_logo_b4c6c9fa.png';
 import bullsLogo from '@assets/generated_images/Chicago_Bulls_team_logo_a3692be6.png';
@@ -15,9 +14,35 @@ export default function Home() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   const mockCalendarEvents = [
-    { id: "1", title: "Bears vs Packers", time: "7:00 PM", category: "sports" as const },
-    { id: "2", title: "Spoon Concert", time: "8:00 PM", category: "music" as const },
-    { id: "3", title: "Bulls vs Lakers", time: "6:30 PM", category: "sports" as const },
+    {
+      id: "1",
+      title: "Bears vs Packers",
+      time: "7:00 PM",
+      date: "Nov 24, 2024 · 7:00 PM",
+      venue: "Soldier Field",
+      price: "From $85",
+      category: "sports" as const,
+      logo: bearsLogo,
+    },
+    {
+      id: "2",
+      title: "Spoon Concert",
+      time: "8:00 PM",
+      date: "Dec 5, 2024 · 8:00 PM",
+      venue: "The Riviera Theatre",
+      price: "From $45",
+      category: "music" as const,
+    },
+    {
+      id: "3",
+      title: "Bulls vs Lakers",
+      time: "6:30 PM",
+      date: "Dec 10, 2024 · 6:30 PM",
+      venue: "United Center",
+      price: "From $95",
+      category: "sports" as const,
+      logo: bullsLogo,
+    },
   ];
 
   const mockEvents = [

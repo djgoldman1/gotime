@@ -14,7 +14,7 @@ export default function Header({ onProfileClick }: HeaderProps) {
         <div className="flex items-center justify-between h-16 gap-4">
           <div className="flex items-center gap-2">
             <Calendar className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">ChiEvents</h1>
+            <h1 className="text-xl font-bold">Anthem</h1>
           </div>
 
           <div className="hidden md:flex flex-1 max-w-md">
