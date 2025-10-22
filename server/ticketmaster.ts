@@ -152,14 +152,24 @@ export class TicketmasterAPI {
     }
   }
 
+  private async delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   async getSportsEvents(teamKeywords?: string[]): Promise<Event[]> {
     if (teamKeywords && teamKeywords.length > 0) {
-      const allEvents = await Promise.all(
-        teamKeywords.map(keyword => 
-          this.searchEvents({ keyword, classificationName: "Sports" })
-        )
-      );
-      return allEvents.flat();
+      const allEvents: Event[] = [];
+      
+      for (const keyword of teamKeywords) {
+        const events = await this.searchEvents({ keyword, classificationName: "Sports" });
+        allEvents.push(...events);
+        
+        if (teamKeywords.indexOf(keyword) < teamKeywords.length - 1) {
+          await this.delay(200);
+        }
+      }
+      
+      return allEvents;
     }
 
     return this.searchEvents({ classificationName: "Sports" });
@@ -167,12 +177,18 @@ export class TicketmasterAPI {
 
   async getMusicEvents(artistKeywords?: string[]): Promise<Event[]> {
     if (artistKeywords && artistKeywords.length > 0) {
-      const allEvents = await Promise.all(
-        artistKeywords.map(keyword => 
-          this.searchEvents({ keyword, classificationName: "Music" })
-        )
-      );
-      return allEvents.flat();
+      const allEvents: Event[] = [];
+      
+      for (const keyword of artistKeywords) {
+        const events = await this.searchEvents({ keyword, classificationName: "Music" });
+        allEvents.push(...events);
+        
+        if (artistKeywords.indexOf(keyword) < artistKeywords.length - 1) {
+          await this.delay(200);
+        }
+      }
+      
+      return allEvents;
     }
 
     return this.searchEvents({ classificationName: "Music" });
@@ -184,19 +200,26 @@ export class TicketmasterAPI {
     venues?: string[];
   }): Promise<Event[]> {
     const sportsEvents = await this.getSportsEvents(preferences.teams);
+    
+    await this.delay(200);
+    
     const musicEvents = await this.getMusicEvents(preferences.artists);
 
     const allEvents = [...sportsEvents, ...musicEvents];
+    
+    const uniqueEvents = allEvents.filter((event, index, self) =>
+      index === self.findIndex(e => e.id === event.id)
+    );
 
     if (preferences.venues && preferences.venues.length > 0) {
-      return allEvents.filter(event => 
+      return uniqueEvents.filter(event => 
         preferences.venues!.some(venue => 
           event.venue.toLowerCase().includes(venue.toLowerCase())
         )
       );
     }
 
-    return allEvents;
+    return uniqueEvents;
   }
 }
 
