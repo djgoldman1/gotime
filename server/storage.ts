@@ -1,6 +1,6 @@
 import { type User, type InsertUser, type UserPreference, type InsertUserPreference } from "@shared/schema";
 import { users, userPreferences } from "@shared/schema";
-import { db } from "@db";
+import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
