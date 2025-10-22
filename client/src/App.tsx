@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -6,38 +5,32 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Welcome from "@/pages/Welcome";
 import Home from "@/pages/Home";
-import OnboardingFlow from "@/components/OnboardingFlow";
+import Onboarding from "@/pages/Onboarding";
+import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
-  const [showWelcome, setShowWelcome] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const { isAuthenticated, isLoading, user } = useAuth();
 
-  const handleGetStarted = () => {
-    setShowWelcome(false);
-    setShowOnboarding(true);
-  };
-
-  const handleOnboardingComplete = () => {
-    setShowOnboarding(false);
-  };
-
-  if (showWelcome) {
-    return <Welcome onGetStarted={handleGetStarted} />;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
   }
 
-  if (showOnboarding) {
-    return (
-      <OnboardingFlow
-        onComplete={handleOnboardingComplete}
-        onSkip={handleOnboardingComplete}
-      />
-    );
+  if (!isAuthenticated) {
+    return <Welcome />;
+  }
+
+  if (!user?.onboardingCompleted) {
+    return <Onboarding userId={user.id} />;
   }
 
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route component={Home} />
+      <Route path="/" component={() => <Home userId={user.id} />} />
+      <Route component={() => <Home userId={user.id} />} />
     </Switch>
   );
 }

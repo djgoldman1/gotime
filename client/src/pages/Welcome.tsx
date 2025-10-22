@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Calendar, Music, Trophy } from "lucide-react";
 
-interface WelcomeProps {
-  onGetStarted: () => void;
-}
+export default function Welcome() {
+  const handleLogin = () => {
+    window.location.href = "/api/login";
+  };
 
-export default function Welcome({ onGetStarted }: WelcomeProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-accent/10 flex items-center justify-center p-4">
       <div className="max-w-4xl mx-auto text-center space-y-8">
@@ -47,7 +47,7 @@ export default function Welcome({ onGetStarted }: WelcomeProps) {
 
         <Button
           size="lg"
-          onClick={onGetStarted}
+          onClick={handleLogin}
           className="text-lg px-8 py-6"
           data-testid="button-get-started"
         >
