@@ -144,16 +144,15 @@ export default function Tastes({ userId }: TastesProps) {
     importSpotifyMutation.mutate();
   };
 
-  const mockTeams = [
-    { id: "Chicago Bears", name: "Chicago Bears" },
-    { id: "Chicago Bulls", name: "Chicago Bulls" },
-    { id: "Chicago Cubs", name: "Chicago Cubs" },
-    { id: "Chicago White Sox", name: "Chicago White Sox" },
-    { id: "Chicago Blackhawks", name: "Chicago Blackhawks" },
-    { id: "Chicago Fire FC", name: "Chicago Fire FC" },
-  ];
+  // Build options from saved preferences only
+  const teamOptions = preferences
+    .filter(p => p.type === "team")
+    .map(p => ({
+      id: p.itemId,
+      name: p.itemName,
+      image: p.itemImage,
+    }));
 
-  // Build artist options from saved preferences only
   const artistOptions = preferences
     .filter(p => p.type === "artist")
     .map(p => ({
@@ -162,14 +161,13 @@ export default function Tastes({ userId }: TastesProps) {
       image: p.itemImage,
     }));
 
-  const mockVenues = [
-    { id: "United Center", name: "United Center" },
-    { id: "Soldier Field", name: "Soldier Field" },
-    { id: "Wrigley Field", name: "Wrigley Field" },
-    { id: "The Riviera Theatre", name: "The Riviera Theatre" },
-    { id: "Metro Chicago", name: "Metro Chicago" },
-    { id: "House of Blues", name: "House of Blues" },
-  ];
+  const venueOptions = preferences
+    .filter(p => p.type === "venue")
+    .map(p => ({
+      id: p.itemId,
+      name: p.itemName,
+      image: p.itemImage,
+    }));
 
   if (isLoading) {
     return (
@@ -199,7 +197,7 @@ export default function Tastes({ userId }: TastesProps) {
             title="Your Favorite Teams"
             description="Teams you'd like to see play"
             placeholder="Search teams..."
-            options={mockTeams}
+            options={teamOptions}
             selectedIds={selectedTeams}
             onSelectionChange={handleTeamsChange}
             hideBadges={true}
@@ -222,7 +220,7 @@ export default function Tastes({ userId }: TastesProps) {
             title="Your Preferred Venues"
             description="Your favorite venues in Chicago"
             placeholder="Search venues..."
-            options={mockVenues}
+            options={venueOptions}
             selectedIds={selectedVenues}
             onSelectionChange={handleVenuesChange}
             hideBadges={true}
