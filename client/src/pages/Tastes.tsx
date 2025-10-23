@@ -37,8 +37,8 @@ export default function Tastes({ userId }: TastesProps) {
   }, [preferences]);
 
   const addPreferenceMutation = useMutation({
-    mutationFn: async ({ type, itemId, itemName }: { type: string; itemId: string; itemName: string }) => {
-      return await apiRequest("POST", `/api/user/${userId}/preferences`, { type, itemId, itemName });
+    mutationFn: async ({ type, itemId, itemName, itemImage }: { type: string; itemId: string; itemName: string; itemImage?: string }) => {
+      return await apiRequest("POST", `/api/user/${userId}/preferences`, { type, itemId, itemName, itemImage });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/user/${userId}/preferences`] });
@@ -75,12 +75,13 @@ export default function Tastes({ userId }: TastesProps) {
     setSelectedTeams(newTeams);
   };
 
-  const handleArtistsChange = (newArtists: string[]) => {
+  const handleArtistsChange = (newArtists: string[], artistsMap?: Map<string, { id: string; name: string; image?: string }>) => {
     const added = newArtists.filter(a => !selectedArtists.includes(a));
     const removed = selectedArtists.filter(a => !newArtists.includes(a));
 
     added.forEach(artist => {
-      addPreferenceMutation.mutate({ type: "artist", itemId: artist, itemName: artist });
+      const artistData = artistsMap?.get(artist) || { name: artist, image: undefined };
+      addPreferenceMutation.mutate({ type: "artist", itemId: artist, itemName: artistData.name, itemImage: artistData.image });
     });
 
     removed.forEach(artist => {

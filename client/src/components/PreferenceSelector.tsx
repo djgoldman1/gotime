@@ -6,13 +6,19 @@ import { Card } from "@/components/ui/card";
 import { Search, X, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
+export interface PreferenceItem {
+  id: string;
+  name: string;
+  image?: string;
+}
+
 interface PreferenceSelectorProps {
   title: string;
   description: string;
   placeholder: string;
-  options: Array<{ id: string; name: string; image?: string }>;
+  options: Array<PreferenceItem>;
   selectedIds?: string[];
-  onSelectionChange?: (ids: string[]) => void;
+  onSelectionChange?: (ids: string[], itemsMap: Map<string, PreferenceItem>) => void;
   enableSpotifySearch?: boolean;
   onSpotifyImport?: () => void;
   isImporting?: boolean;
@@ -32,11 +38,21 @@ export default function PreferenceSelector({
   const [selected, setSelected] = useState<string[]>(selectedIds);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [remoteArtistMap, setRemoteArtistMap] = useState<Map<string, { id: string; name: string; image?: string }>>(new Map());
+  const [itemsMap, setItemsMap] = useState<Map<string, PreferenceItem>>(() => {
+    const map = new Map<string, PreferenceItem>();
+    options.forEach(option => map.set(option.id, option));
+    return map;
+  });
 
   useEffect(() => {
     setSelected(selectedIds);
   }, [selectedIds]);
+
+  useEffect(() => {
+    const map = new Map<string, PreferenceItem>();
+    options.forEach(option => map.set(option.id, option));
+    setItemsMap(map);
+  }, [options]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -57,26 +73,29 @@ export default function PreferenceSelector({
         option.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-  const toggleSelection = (id: string, artistData?: { id: string; name: string; image?: string }) => {
+  const toggleSelection = (id: string, itemData?: PreferenceItem) => {
     const newSelected = selected.includes(id)
       ? selected.filter((s) => s !== id)
       : [...selected, id];
     setSelected(newSelected);
-    onSelectionChange?.(newSelected);
     
-    if (artistData && !selected.includes(id)) {
-      setRemoteArtistMap(prev => new Map(prev).set(id, artistData));
+    // Update the items map if we have new data
+    if (itemData && !itemsMap.has(id)) {
+      setItemsMap(prev => new Map(prev).set(id, itemData));
     }
     
-    console.log('Selection changed:', newSelected);
+    // Pass both IDs and the full items map to parent
+    const currentMap = itemData && !itemsMap.has(id)
+      ? new Map(itemsMap).set(id, itemData)
+      : itemsMap;
+    
+    onSelectionChange?.(newSelected, currentMap);
   };
 
   const isSelected = (id: string) => selected.includes(id);
 
   const getOptionForSelectedId = (id: string) => {
-    const staticOption = options.find(o => o.id === id);
-    if (staticOption) return staticOption;
-    return remoteArtistMap.get(id) || { id, name: id };
+    return itemsMap.get(id) || { id, name: id };
   };
 
   return (

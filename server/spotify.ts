@@ -56,27 +56,47 @@ async function getAccessToken() {
   return {accessToken, clientId, refreshToken, expiresIn};
 }
 
+let clientCredentialsCache: { token: string; expiresAt: number } | null = null;
+
 async function getClientCredentialsToken() {
+  if (clientCredentialsCache && clientCredentialsCache.expiresAt > Date.now()) {
+    console.log("Using cached client credentials token");
+    return clientCredentialsCache.token;
+  }
+
   try {
-    const {clientId} = await getAccessToken();
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
     
-    console.log("Getting client credentials token for public API access");
+    if (!clientId || !clientSecret) {
+      throw new Error("Spotify API credentials not configured");
+    }
+    
+    console.log("Getting fresh client credentials token for public API access");
     
     const response = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${Buffer.from(clientId + ':').toString('base64')}`,
+        'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
       },
       body: 'grant_type=client_credentials',
     });
 
     if (!response.ok) {
-      console.error("Failed to get client credentials token");
+      const errorText = await response.text();
+      console.error("Failed to get client credentials token:", errorText);
       throw new Error("Failed to authenticate with Spotify");
     }
 
     const data = await response.json();
+    
+    clientCredentialsCache = {
+      token: data.access_token,
+      expiresAt: Date.now() + (data.expires_in - 60) * 1000,
+    };
+    
+    console.log("Successfully obtained client credentials token");
     return data.access_token;
   } catch (error) {
     console.error("Error getting client credentials:", error);
@@ -123,7 +143,9 @@ class SpotifyService {
     try {
       console.log(`Searching Spotify for artists: "${query}" (limit: ${limit})`);
       const endpoint = `/search?q=${encodeURIComponent(query)}&type=artist&limit=${Math.min(limit, 50)}`;
-      const results = await makeSpotifyRequest(endpoint);
+      
+      // Use public API (no user auth required)
+      const results = await makeSpotifyRequest(endpoint, false);
       
       console.log(`Found ${results.artists.items.length} artist results`);
       
@@ -144,7 +166,9 @@ class SpotifyService {
     try {
       console.log(`Fetching user's top artists (limit: ${limit}, offset: ${offset})`);
       const endpoint = `/me/top/artists?time_range=medium_term&limit=${Math.min(limit, 50)}&offset=${offset}`;
-      const results = await makeSpotifyRequest(endpoint);
+      
+      // Requires user auth - subject to Spotify Development Mode limitations
+      const results = await makeSpotifyRequest(endpoint, true);
       
       console.log(`Found ${results.items.length} top artists`);
       
