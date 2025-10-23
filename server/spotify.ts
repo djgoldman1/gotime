@@ -4,7 +4,11 @@ let connectionSettings: any;
 
 async function getAccessToken() {
   if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
-    return connectionSettings.settings.access_token;
+    const refreshToken = connectionSettings?.settings?.oauth?.credentials?.refresh_token;
+    const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
+    const clientId = connectionSettings?.settings?.oauth?.credentials?.client_id;
+    const expiresIn = connectionSettings.settings?.oauth?.credentials?.expires_in;
+    return {accessToken, clientId, refreshToken, expiresIn};
   }
   
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME

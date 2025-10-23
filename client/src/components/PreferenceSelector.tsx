@@ -15,6 +15,7 @@ interface PreferenceSelectorProps {
   onSelectionChange?: (ids: string[]) => void;
   enableSpotifySearch?: boolean;
   onSpotifyImport?: () => void;
+  isImporting?: boolean;
 }
 
 export default function PreferenceSelector({
@@ -26,10 +27,16 @@ export default function PreferenceSelector({
   onSelectionChange,
   enableSpotifySearch = false,
   onSpotifyImport,
+  isImporting = false,
 }: PreferenceSelectorProps) {
   const [selected, setSelected] = useState<string[]>(selectedIds);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [remoteArtistMap, setRemoteArtistMap] = useState<Map<string, { id: string; name: string; image?: string }>>(new Map());
+
+  useEffect(() => {
+    setSelected(selectedIds);
+  }, [selectedIds]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -54,16 +61,27 @@ export default function PreferenceSelector({
         option.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-  const toggleSelection = (id: string) => {
+  const toggleSelection = (id: string, artistData?: { id: string; name: string; image?: string }) => {
     const newSelected = selected.includes(id)
       ? selected.filter((s) => s !== id)
       : [...selected, id];
     setSelected(newSelected);
     onSelectionChange?.(newSelected);
+    
+    if (artistData && !selected.includes(id)) {
+      setRemoteArtistMap(prev => new Map(prev).set(id, artistData));
+    }
+    
     console.log('Selection changed:', newSelected);
   };
 
   const isSelected = (id: string) => selected.includes(id);
+
+  const getOptionForSelectedId = (id: string) => {
+    const staticOption = options.find(o => o.id === id);
+    if (staticOption) return staticOption;
+    return remoteArtistMap.get(id) || { id, name: id };
+  };
 
   return (
     <div className="space-y-4">
@@ -78,8 +96,10 @@ export default function PreferenceSelector({
             onClick={onSpotifyImport}
             data-testid="button-spotify-import"
             className="shrink-0"
+            disabled={isImporting}
           >
-            Import from Spotify
+            {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isImporting ? "Importing..." : "Import from Spotify"}
           </Button>
         )}
       </div>
@@ -102,8 +122,7 @@ export default function PreferenceSelector({
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selected.map((id) => {
-            const option = options.find((o) => o.id === id);
-            if (!option) return null;
+            const option = getOptionForSelectedId(id);
             return (
               <Badge
                 key={id}
@@ -139,7 +158,7 @@ export default function PreferenceSelector({
             className={`p-4 cursor-pointer hover-elevate active-elevate-2 transition-all ${
               isSelected(option.id) ? "ring-2 ring-primary" : ""
             }`}
-            onClick={() => toggleSelection(option.id)}
+            onClick={() => toggleSelection(option.id, option)}
             data-testid={`card-preference-${option.id}`}
           >
             <div className="flex items-center gap-3">

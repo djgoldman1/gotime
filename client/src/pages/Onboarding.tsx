@@ -17,7 +17,6 @@ export default function Onboarding({ userId }: OnboardingProps) {
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedArtists, setSelectedArtists] = useState<string[]>([]);
   const [selectedVenues, setSelectedVenues] = useState<string[]>([]);
-  const [isImportingSpotify, setIsImportingSpotify] = useState(false);
   const { toast } = useToast();
 
   const importSpotifyMutation = useMutation({
@@ -33,7 +32,7 @@ export default function Onboarding({ userId }: OnboardingProps) {
     onSuccess: (artists: Array<{ name: string }>) => {
       const artistNames = artists.map(a => a.name);
       setSelectedArtists(prev => {
-        const combined = [...new Set([...prev, ...artistNames])];
+        const combined = Array.from(new Set([...prev, ...artistNames]));
         return combined;
       });
       toast({
@@ -51,7 +50,6 @@ export default function Onboarding({ userId }: OnboardingProps) {
   });
 
   const handleSpotifyImport = () => {
-    setIsImportingSpotify(true);
     importSpotifyMutation.mutate();
   };
 
@@ -164,6 +162,7 @@ export default function Onboarding({ userId }: OnboardingProps) {
               onSelectionChange={setSelectedArtists}
               enableSpotifySearch={true}
               onSpotifyImport={handleSpotifyImport}
+              isImporting={importSpotifyMutation.isPending}
             />
           )}
           {step === 3 && (
