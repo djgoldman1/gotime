@@ -5,14 +5,19 @@ import ThemeToggle from "./ThemeToggle";
 
 interface HeaderProps {
   onProfileClick?: () => void;
+  onLogoClick?: () => void;
 }
 
-export default function Header({ onProfileClick }: HeaderProps) {
+export default function Header({ onProfileClick, onLogoClick }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 gap-4">
-          <div className="flex items-center gap-2">
+          <div 
+            className="flex items-center gap-2 cursor-pointer hover-elevate active-elevate-2 rounded-md px-2 py-1 -mx-2" 
+            onClick={onLogoClick}
+            data-testid="button-logo"
+          >
             <Calendar className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold">GoTime</h1>
           </div>

@@ -7,6 +7,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 
+type ViewMode = "day" | "week" | "month";
+
 interface HomeProps {
   userId: string;
 }
@@ -14,8 +16,10 @@ interface HomeProps {
 export default function Home({ userId }: HomeProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [currentViewMode, setCurrentViewMode] = useState<ViewMode>("week");
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
-  const { data: events = [], isLoading } = useQuery({
+  const { data: events = [], isLoading } = useQuery<any[]>({
     queryKey: [`/api/user/${userId}/recommended-events`],
   });
 
@@ -23,9 +27,74 @@ export default function Home({ userId }: HomeProps) {
     window.location.href = "/api/logout";
   };
 
+  const handleLogoClick = () => {
+    setCurrentViewMode("week");
+    setCurrentDate(new Date());
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleViewChange = (viewMode: ViewMode, date: Date) => {
+    setCurrentViewMode(viewMode);
+    setCurrentDate(date);
+  };
+
+  const parseEventDate = (eventDateStr: string): Date | null => {
+    try {
+      const datePart = eventDateStr.split(' · ')[0];
+      return new Date(datePart);
+    } catch {
+      return null;
+    }
+  };
+
+  const isSameDay = (date1: Date, date2: Date) => {
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+  };
+
+  const isInWeek = (eventDate: Date, currentDate: Date) => {
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+    
+    return eventDate >= startOfWeek && eventDate <= endOfWeek;
+  };
+
+  const isInMonth = (eventDate: Date, currentDate: Date) => {
+    return eventDate.getFullYear() === currentDate.getFullYear() &&
+           eventDate.getMonth() === currentDate.getMonth();
+  };
+
+  const filterEventsByDateRange = (events: any[]) => {
+    if (currentViewMode === "day") {
+      return events.filter((e: any) => {
+        const eventDate = parseEventDate(e.date);
+        return eventDate && isSameDay(eventDate, currentDate);
+      });
+    } else if (currentViewMode === "week") {
+      return events.filter((e: any) => {
+        const eventDate = parseEventDate(e.date);
+        return eventDate && isInWeek(eventDate, currentDate);
+      });
+    } else if (currentViewMode === "month") {
+      return events.filter((e: any) => {
+        const eventDate = parseEventDate(e.date);
+        return eventDate && isInMonth(eventDate, currentDate);
+      });
+    }
+    return events;
+  };
+
+  const dateFilteredEvents = filterEventsByDateRange(events);
+  
   const filteredEvents = selectedCategory === "all"
-    ? events
-    : events.filter((e: any) => e.category === selectedCategory);
+    ? dateFilteredEvents
+    : dateFilteredEvents.filter((e: any) => e.category === selectedCategory);
 
   const calendarEvents = events.map((e: any) => ({
     id: e.id,
@@ -50,7 +119,10 @@ export default function Home({ userId }: HomeProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onProfileClick={handleLogout} />
+      <Header 
+        onProfileClick={handleLogout}
+        onLogoClick={handleLogoClick}
+      />
       
       <main className="container mx-auto px-4 py-8 space-y-8">
         <section>
@@ -65,7 +137,10 @@ export default function Home({ userId }: HomeProps) {
           ) : (
             <CalendarView
               events={calendarEvents}
+              viewMode={currentViewMode}
+              currentDate={currentDate}
               onEventClick={(id) => setSelectedEventId(id)}
+              onViewChange={handleViewChange}
             />
           )}
         </section>
