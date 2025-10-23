@@ -30,9 +30,9 @@ export default function Tastes({ userId }: TastesProps) {
 
   useEffect(() => {
     if (preferences.length > 0) {
-      setSelectedTeams(preferences.filter(p => p.type === "team").map(p => p.itemName));
-      setSelectedArtists(preferences.filter(p => p.type === "artist").map(p => p.itemName));
-      setSelectedVenues(preferences.filter(p => p.type === "venue").map(p => p.itemName));
+      setSelectedTeams(preferences.filter(p => p.type === "team").map(p => p.itemId));
+      setSelectedArtists(preferences.filter(p => p.type === "artist").map(p => p.itemId));
+      setSelectedVenues(preferences.filter(p => p.type === "venue").map(p => p.itemId));
     }
   }, [preferences]);
 
@@ -47,8 +47,8 @@ export default function Tastes({ userId }: TastesProps) {
   });
 
   const removePreferenceMutation = useMutation({
-    mutationFn: async (itemName: string) => {
-      return await apiRequest("DELETE", `/api/user/${userId}/preferences/${itemName}`);
+    mutationFn: async (itemId: string) => {
+      return await apiRequest("DELETE", `/api/user/${userId}/preferences/${itemId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/user/${userId}/preferences`] });
