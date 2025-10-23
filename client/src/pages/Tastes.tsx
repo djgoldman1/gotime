@@ -30,11 +30,9 @@ export default function Tastes({ userId }: TastesProps) {
   });
 
   useEffect(() => {
-    if (preferences.length > 0) {
-      setSelectedTeams(preferences.filter(p => p.type === "team").map(p => p.itemId));
-      setSelectedArtists(preferences.filter(p => p.type === "artist").map(p => p.itemId));
-      setSelectedVenues(preferences.filter(p => p.type === "venue").map(p => p.itemId));
-    }
+    setSelectedTeams(preferences.filter(p => p.type === "team").map(p => p.itemId));
+    setSelectedArtists(preferences.filter(p => p.type === "artist").map(p => p.itemId));
+    setSelectedVenues(preferences.filter(p => p.type === "venue").map(p => p.itemId));
   }, [preferences]);
 
   const addPreferenceMutation = useMutation({
