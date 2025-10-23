@@ -244,29 +244,42 @@ Preferred communication style: Simple, everyday language.
 - Music filtering could be enhanced with genre-based filtering
 - Could add favorite/saved events feature
 
-### ⚠️ Spotify Integration Setup Required
+### 🎵 Spotify Integration Status
 
-**Current Status:** Spotify connector is installed but needs authorization
+**Currently Active:**
+- ✅ **Artist Search:** Live search using Spotify's full catalog (300ms debounced)
+- ✅ **Replit Connector:** OAuth authentication configured and working
+- ✅ **Data Quality:** Artist data includes id, name, image, genres, popularity
 
-**To Enable Spotify Features:**
-1. You (the app owner) need to connect your personal Spotify account
-2. This authorizes the app to use Spotify's API on behalf of users
-3. Once authorized, both search and import features will work
+**Currently Disabled:**
+- ⏸️ **"Import from Spotify" Button:** Hidden until Spotify approves Extended Quota Mode
 
-**How to Connect:**
-1. Try using the "Import from Spotify" button in the app
-2. You'll be redirected to Spotify to authorize the connection
-3. After authorizing, return to the app
-4. Both features will then work for all users
+**Why is Import Disabled?**
+The Spotify app is in Development Mode, which limits API access to whitelisted users only. To avoid confusing users with 403 errors, the import feature is behind a feature flag.
 
-**Features (Once Authorized):**
-- ✅ Artist search using Spotify's catalog
-- ✅ Live search results with 300ms debounce
-- ✅ Import user's top 100 Spotify artists
-- ✅ Artist data includes: id, name, image, genres, popularity
-- ✅ OAuth token auto-refresh
+**How to Enable "Import from Spotify" for Everyone:**
 
-**Technical Note:** The Replit Spotify connector uses OAuth, which requires the app owner's Spotify account to be connected before API calls will work. This is different from API key-based integrations.
+1. **Request Extended Quota Mode** (through Spotify, not Replit):
+   - Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
+   - Click on your Spotify app
+   - Click "Request Extended Quota Mode" or "Request Quota Extension"
+   - Fill out the form explaining your use case
+   - Submit and wait for approval (typically a few days)
+
+2. **Enable the Feature Flag** (once Spotify approves):
+   - Open the Replit Secrets tab (🔒 in left sidebar)
+   - Add new secret: `VITE_ENABLE_SPOTIFY_IMPORT` = `true`
+   - Restart the app
+   - The "Import from Spotify" button will now appear!
+
+**Alternative (Not Recommended):**
+You can whitelist up to 25 users in Development Mode via the Spotify dashboard → User Management. However, this doesn't scale and other users will see errors.
+
+**Technical Details:**
+- Artist search uses Client Credentials flow (no user auth needed)
+- Import feature uses OAuth flow (requires Extended Quota Mode)
+- OAuth tokens auto-refresh via Replit connector
+- All authentication handled server-side for security
 
 ### 🚀 Next Steps
 

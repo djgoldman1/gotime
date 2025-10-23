@@ -134,6 +134,8 @@ export default function PreferenceSelector({
     return allItemsMap.get(id) || { id, name: id };
   };
 
+  const isSpotifyImportEnabled = import.meta.env.VITE_ENABLE_SPOTIFY_IMPORT === 'true';
+
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
@@ -141,7 +143,7 @@ export default function PreferenceSelector({
           <h3 className="text-2xl font-semibold mb-2">{title}</h3>
           <p className="text-muted-foreground">{description}</p>
         </div>
-        {onSpotifyImport && (
+        {onSpotifyImport && isSpotifyImportEnabled && (
           <Button
             variant="outline"
             onClick={onSpotifyImport}
