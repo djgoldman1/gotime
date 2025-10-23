@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import PreferenceSelector from "@/components/PreferenceSelector";
+import PreferenceSelector, { type PreferenceItem } from "@/components/PreferenceSelector";
 import { ChevronRight } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -17,7 +17,44 @@ export default function Onboarding({ userId }: OnboardingProps) {
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedArtists, setSelectedArtists] = useState<string[]>([]);
   const [selectedVenues, setSelectedVenues] = useState<string[]>([]);
+  const [teamsMap, setTeamsMap] = useState<Map<string, PreferenceItem>>(new Map());
+  const [artistsMap, setArtistsMap] = useState<Map<string, PreferenceItem>>(new Map());
+  const [venuesMap, setVenuesMap] = useState<Map<string, PreferenceItem>>(new Map());
   const { toast } = useToast();
+
+  const importSpotifyMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/spotify/top-artists?limit=100", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to import from Spotify");
+      }
+      return response.json();
+    },
+    onSuccess: (artists: Array<{ name: string }>) => {
+      const artistNames = artists.map(a => a.name);
+      setSelectedArtists(prev => {
+        const combined = Array.from(new Set([...prev, ...artistNames]));
+        return combined;
+      });
+      toast({
+        title: "Success",
+        description: `Imported ${artists.length} artists from Spotify!`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to import from Spotify. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSpotifyImport = () => {
+    importSpotifyMutation.mutate();
+  };
 
   const totalSteps = 3;
   const progress = (step / totalSteps) * 100;
@@ -29,14 +66,6 @@ export default function Onboarding({ userId }: OnboardingProps) {
     { id: "Chicago White Sox", name: "Chicago White Sox" },
     { id: "Chicago Blackhawks", name: "Chicago Blackhawks" },
     { id: "Chicago Fire FC", name: "Chicago Fire FC" },
-  ];
-
-  const mockArtists = [
-    { id: "Spoon", name: "Spoon" },
-    { id: "The National", name: "The National" },
-    { id: "Wilco", name: "Wilco" },
-    { id: "Chance the Rapper", name: "Chance the Rapper" },
-    { id: "Common", name: "Common" },
   ];
 
   const mockVenues = [
@@ -51,9 +80,18 @@ export default function Onboarding({ userId }: OnboardingProps) {
   const completeMutation = useMutation({
     mutationFn: async () => {
       const preferences = [
-        ...selectedTeams.map(id => ({ type: "team", itemId: id, itemName: id })),
-        ...selectedArtists.map(id => ({ type: "artist", itemId: id, itemName: id })),
-        ...selectedVenues.map(id => ({ type: "venue", itemId: id, itemName: id })),
+        ...selectedTeams.map(id => {
+          const item = teamsMap.get(id) || { name: id, image: undefined };
+          return { type: "team", itemId: id, itemName: item.name, itemImage: item.image };
+        }),
+        ...selectedArtists.map(id => {
+          const item = artistsMap.get(id) || { name: id, image: undefined };
+          return { type: "artist", itemId: id, itemName: item.name, itemImage: item.image };
+        }),
+        ...selectedVenues.map(id => {
+          const item = venuesMap.get(id) || { name: id, image: undefined };
+          return { type: "venue", itemId: id, itemName: item.name, itemImage: item.image };
+        }),
       ];
 
       for (const pref of preferences) {
@@ -115,7 +153,10 @@ export default function Onboarding({ userId }: OnboardingProps) {
               placeholder="Search teams..."
               options={mockTeams}
               selectedIds={selectedTeams}
-              onSelectionChange={setSelectedTeams}
+              onSelectionChange={(ids, map) => {
+                setSelectedTeams(ids);
+                setTeamsMap(map);
+              }}
             />
           )}
           {step === 2 && (
@@ -123,9 +164,15 @@ export default function Onboarding({ userId }: OnboardingProps) {
               title="Select Your Favorite Artists"
               description="Choose artists and bands you'd like to see live"
               placeholder="Search artists..."
-              options={mockArtists}
+              options={[]}
               selectedIds={selectedArtists}
-              onSelectionChange={setSelectedArtists}
+              onSelectionChange={(ids, map) => {
+                setSelectedArtists(ids);
+                setArtistsMap(map);
+              }}
+              enableSpotifySearch={true}
+              onSpotifyImport={handleSpotifyImport}
+              isImporting={importSpotifyMutation.isPending}
             />
           )}
           {step === 3 && (
@@ -135,7 +182,10 @@ export default function Onboarding({ userId }: OnboardingProps) {
               placeholder="Search venues..."
               options={mockVenues}
               selectedIds={selectedVenues}
-              onSelectionChange={setSelectedVenues}
+              onSelectionChange={(ids, map) => {
+                setSelectedVenues(ids);
+                setVenuesMap(map);
+              }}
             />
           )}
         </div>

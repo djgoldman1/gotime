@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertUserPreferenceSchema } from "@shared/schema";
 import { ticketmasterAPI } from "./ticketmaster";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { spotifyService } from "./spotify";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
@@ -187,6 +188,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to fetch recommended events:", error);
       res.status(500).json({ error: "Failed to fetch recommended events" });
+    }
+  });
+
+  app.get("/api/spotify/search/artists", isAuthenticated, async (req, res) => {
+    try {
+      const query = req.query.query as string;
+      if (!query || query.trim().length === 0) {
+        return res.json([]);
+      }
+
+      const artists = await spotifyService.searchArtists(query, 20);
+      res.json(artists);
+    } catch (error) {
+      console.error("Failed to search Spotify artists:", error);
+      res.status(500).json({ error: "Failed to search artists" });
+    }
+  });
+
+  app.get("/api/spotify/top-artists", isAuthenticated, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 100;
+      const artists = await spotifyService.getUserTopArtistsMultiplePages(limit);
+      res.json(artists);
+    } catch (error) {
+      console.error("Failed to fetch user's top artists:", error);
+      res.status(500).json({ error: "Failed to fetch top artists" });
     }
   });
 

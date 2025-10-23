@@ -1,0 +1,243 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import Header from "@/components/Header";
+import PreferenceSelector from "@/components/PreferenceSelector";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+
+interface TastesProps {
+  userId: string;
+}
+
+interface UserPreference {
+  id: number;
+  userId: string;
+  type: "team" | "artist" | "venue";
+  itemId: string;
+  itemName: string;
+  itemImage?: string;
+}
+
+export default function Tastes({ userId }: TastesProps) {
+  const { toast } = useToast();
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const [selectedArtists, setSelectedArtists] = useState<string[]>([]);
+  const [selectedVenues, setSelectedVenues] = useState<string[]>([]);
+
+  const { data: preferences = [], isLoading } = useQuery<UserPreference[]>({
+    queryKey: [`/api/user/${userId}/preferences`],
+  });
+
+  useEffect(() => {
+    const teams = preferences.filter(p => p.type === "team").map(p => p.itemId);
+    const artists = preferences.filter(p => p.type === "artist").map(p => p.itemId);
+    const venues = preferences.filter(p => p.type === "venue").map(p => p.itemId);
+    
+    // Only update state if values actually changed (prevent render loop)
+    if (JSON.stringify(teams) !== JSON.stringify(selectedTeams)) {
+      setSelectedTeams(teams);
+    }
+    if (JSON.stringify(artists) !== JSON.stringify(selectedArtists)) {
+      setSelectedArtists(artists);
+    }
+    if (JSON.stringify(venues) !== JSON.stringify(selectedVenues)) {
+      setSelectedVenues(venues);
+    }
+  }, [preferences, selectedTeams, selectedArtists, selectedVenues]);
+
+  const addPreferenceMutation = useMutation({
+    mutationFn: async ({ type, itemId, itemName, itemImage }: { type: string; itemId: string; itemName: string; itemImage?: string }) => {
+      return await apiRequest("POST", `/api/user/${userId}/preferences`, { type, itemId, itemName, itemImage });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/user/${userId}/preferences`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/user/${userId}/recommended-events`] });
+    },
+  });
+
+  const removePreferenceMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      return await apiRequest("DELETE", `/api/user/${userId}/preferences/${itemId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/user/${userId}/preferences`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/user/${userId}/recommended-events`] });
+      toast({
+        title: "Preference removed",
+        description: "Your preferences have been updated.",
+      });
+    },
+  });
+
+  const handleTeamsChange = (newTeams: string[]) => {
+    const added = newTeams.filter(t => !selectedTeams.includes(t));
+    const removed = selectedTeams.filter(t => !newTeams.includes(t));
+
+    added.forEach(team => {
+      addPreferenceMutation.mutate({ type: "team", itemId: team, itemName: team });
+    });
+
+    removed.forEach(team => {
+      removePreferenceMutation.mutate(team);
+    });
+
+    setSelectedTeams(newTeams);
+  };
+
+  const handleArtistsChange = (newArtists: string[], artistsMap?: Map<string, { id: string; name: string; image?: string }>) => {
+    const added = newArtists.filter(a => !selectedArtists.includes(a));
+    const removed = selectedArtists.filter(a => !newArtists.includes(a));
+
+    added.forEach(artist => {
+      const artistData = artistsMap?.get(artist) || { name: artist, image: undefined };
+      addPreferenceMutation.mutate({ type: "artist", itemId: artist, itemName: artistData.name, itemImage: artistData.image });
+    });
+
+    removed.forEach(artist => {
+      removePreferenceMutation.mutate(artist);
+    });
+
+    setSelectedArtists(newArtists);
+  };
+
+  const handleVenuesChange = (newVenues: string[]) => {
+    const added = newVenues.filter(v => !selectedVenues.includes(v));
+    const removed = selectedVenues.filter(v => !newVenues.includes(v));
+
+    added.forEach(venue => {
+      addPreferenceMutation.mutate({ type: "venue", itemId: venue, itemName: venue });
+    });
+
+    removed.forEach(venue => {
+      removePreferenceMutation.mutate(venue);
+    });
+
+    setSelectedVenues(newVenues);
+  };
+
+  const importSpotifyMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/spotify/top-artists?limit=100", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to import from Spotify");
+      }
+      return response.json();
+    },
+    onSuccess: (artists: Array<{ name: string }>) => {
+      const artistNames = artists.map(a => a.name);
+      const newArtists = artistNames.filter(name => !selectedArtists.includes(name));
+      
+      newArtists.forEach(artist => {
+        addPreferenceMutation.mutate({ type: "artist", itemId: artist, itemName: artist });
+      });
+      
+      setSelectedArtists(prev => Array.from(new Set([...prev, ...artistNames])));
+      
+      toast({
+        title: "Success",
+        description: `Imported ${newArtists.length} new artists from Spotify!`,
+      });
+    },
+    onError: (error: any) => {
+      console.error("Spotify import error:", error);
+      toast({
+        title: "Spotify Import Restricted",
+        description: "Your Spotify account needs to be whitelisted in the app's Spotify Developer Dashboard. Contact the app owner to add your email address to the whitelist, or wait for the app to be approved for Extended Quota Mode.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSpotifyImport = () => {
+    importSpotifyMutation.mutate();
+  };
+
+  // Build options from saved preferences only
+  const teamOptions = preferences
+    .filter(p => p.type === "team")
+    .map(p => ({
+      id: p.itemId,
+      name: p.itemName,
+      image: p.itemImage,
+    }));
+
+  const artistOptions = preferences
+    .filter(p => p.type === "artist")
+    .map(p => ({
+      id: p.itemId,
+      name: p.itemName,
+      image: p.itemImage,
+    }));
+
+  const venueOptions = preferences
+    .filter(p => p.type === "venue")
+    .map(p => ({
+      id: p.itemId,
+      name: p.itemName,
+      image: p.itemImage,
+    }));
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header onLogoClick={() => {}} />
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header onLogoClick={() => {}} />
+      
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2" data-testid="text-tastes-title">Your Tastes</h1>
+          <p className="text-muted-foreground">
+            Manage your preferences to get personalized event recommendations
+          </p>
+        </div>
+
+        <div className="space-y-8">
+          <PreferenceSelector
+            title="Your Favorite Teams"
+            description="Teams you'd like to see play"
+            placeholder="Search teams..."
+            options={teamOptions}
+            selectedIds={selectedTeams}
+            onSelectionChange={handleTeamsChange}
+            hideBadges={true}
+          />
+
+          <PreferenceSelector
+            title="Your Favorite Artists"
+            description="Artists and bands you'd like to see live"
+            placeholder="Search artists..."
+            options={artistOptions}
+            selectedIds={selectedArtists}
+            onSelectionChange={handleArtistsChange}
+            enableSpotifySearch={true}
+            onSpotifyImport={handleSpotifyImport}
+            isImporting={importSpotifyMutation.isPending}
+            hideBadges={true}
+          />
+
+          <PreferenceSelector
+            title="Your Preferred Venues"
+            description="Your favorite venues in Chicago"
+            placeholder="Search venues..."
+            options={venueOptions}
+            selectedIds={selectedVenues}
+            onSelectionChange={handleVenuesChange}
+            hideBadges={true}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
