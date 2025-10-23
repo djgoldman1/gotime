@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Search, X } from "lucide-react";
+import { Search, X, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface PreferenceSelectorProps {
   title: string;
@@ -12,6 +13,8 @@ interface PreferenceSelectorProps {
   options: Array<{ id: string; name: string; image?: string }>;
   selectedIds?: string[];
   onSelectionChange?: (ids: string[]) => void;
+  enableSpotifySearch?: boolean;
+  onSpotifyImport?: () => void;
 }
 
 export default function PreferenceSelector({
@@ -21,13 +24,35 @@ export default function PreferenceSelector({
   options,
   selectedIds = [],
   onSelectionChange,
+  enableSpotifySearch = false,
+  onSpotifyImport,
 }: PreferenceSelectorProps) {
   const [selected, setSelected] = useState<string[]>(selectedIds);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
 
-  const filteredOptions = options.filter((option) =>
-    option.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const { data: spotifyResults = [], isLoading: isSearching } = useQuery({
+    queryKey: ["/api/spotify/search/artists", debouncedQuery],
+    enabled: enableSpotifySearch && debouncedQuery.length > 0,
+  });
+
+  const displayOptions = enableSpotifySearch && searchQuery.length > 0 
+    ? spotifyResults.map((artist: any) => ({
+        id: artist.name,
+        name: artist.name,
+        image: artist.image,
+      }))
+    : options.filter((option) =>
+        option.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
 
   const toggleSelection = (id: string) => {
     const newSelected = selected.includes(id)
@@ -42,9 +67,21 @@ export default function PreferenceSelector({
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-2xl font-semibold mb-2">{title}</h3>
-        <p className="text-muted-foreground">{description}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-2xl font-semibold mb-2">{title}</h3>
+          <p className="text-muted-foreground">{description}</p>
+        </div>
+        {onSpotifyImport && (
+          <Button
+            variant="outline"
+            onClick={onSpotifyImport}
+            data-testid="button-spotify-import"
+            className="shrink-0"
+          >
+            Import from Spotify
+          </Button>
+        )}
       </div>
 
       <div className="relative">
@@ -57,6 +94,9 @@ export default function PreferenceSelector({
           className="pl-10"
           data-testid="input-search-preferences"
         />
+        {isSearching && (
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground animate-spin" />
+        )}
       </div>
 
       {selected.length > 0 && (
@@ -88,7 +128,12 @@ export default function PreferenceSelector({
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto">
-        {filteredOptions.map((option) => (
+        {displayOptions.length === 0 && searchQuery.length > 0 && !isSearching && (
+          <div className="col-span-full text-center text-muted-foreground py-8">
+            No results found for "{searchQuery}"
+          </div>
+        )}
+        {displayOptions.map((option) => (
           <Card
             key={option.id}
             className={`p-4 cursor-pointer hover-elevate active-elevate-2 transition-all ${
