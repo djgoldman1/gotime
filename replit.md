@@ -180,7 +180,7 @@ Preferred communication style: Simple, everyday language.
 - Session userId validation (prevents unauthorized access)
 - Fixed onboarding preference submission (removed null itemImage issue)
 
-**7. Spotify Integration** (October 23, 2025 - Latest)
+**7. Spotify Integration** (October 23, 2025)
 - Integrated Spotify Web API via Replit connector for OAuth handling
 - Live artist search during onboarding using Spotify's catalog (300ms debounced)
 - "Import from Spotify" button fetches user's top 100 artists
@@ -190,10 +190,20 @@ Preferred communication style: Simple, everyday language.
 - Loading states for search and import operations
 - Success/error toast notifications for user feedback
 
+**8. Tastes Management Page** (October 23, 2025 - Latest)
+- Created dedicated `/tastes` page for managing preferences post-onboarding
+- Users can add/remove teams, artists, and venues anytime
+- Real-time updates with automatic cache invalidation
+- Spotify integration available on Tastes page
+- Navigation integrated in app header (Calendar and Tastes buttons)
+- All changes immediately reflected in event recommendations
+- Proper itemId/itemName handling for data consistency
+
 ### 🎨 Current Features
 
 - **400+ Real Chicago Events** from Ticketmaster API
 - **Spotify Integration** for artist discovery and import
+- **Tastes Management** - dedicated page to update preferences anytime
 - **Interactive Calendar** with day/week/month views
 - **Smart Filtering** by teams, artists, and venues
 - **Secure Authentication** with multiple OAuth providers
