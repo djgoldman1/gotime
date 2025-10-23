@@ -63,7 +63,7 @@ class SpotifyService {
   async searchArtists(query: string, limit: number = 20): Promise<SpotifyArtist[]> {
     try {
       const spotify = await getUncachableSpotifyClient();
-      const results = await spotify.search(query, ["artist"], undefined, limit);
+      const results = await spotify.search(query, ["artist"], undefined, Math.min(limit, 50) as any);
       
       return results.artists.items.map(artist => ({
         id: artist.id,
@@ -81,7 +81,7 @@ class SpotifyService {
   async getUserTopArtists(limit: number = 50, offset: number = 0): Promise<SpotifyArtist[]> {
     try {
       const spotify = await getUncachableSpotifyClient();
-      const results = await spotify.currentUser.topItems("artists", "medium_term", limit, offset);
+      const results = await spotify.currentUser.topItems("artists", "medium_term", Math.min(limit, 50) as any, offset);
       
       return results.items.map(artist => ({
         id: artist.id,
