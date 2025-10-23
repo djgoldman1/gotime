@@ -39,13 +39,13 @@ export default function PreferenceSelector({
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const { data: spotifyResults = [], isLoading: isSearching } = useQuery({
+  const { data: spotifyResults = [], isLoading: isSearching } = useQuery<Array<{ id: string; name: string; image?: string }>>({
     queryKey: ["/api/spotify/search/artists", debouncedQuery],
     enabled: enableSpotifySearch && debouncedQuery.length > 0,
   });
 
   const displayOptions = enableSpotifySearch && searchQuery.length > 0 
-    ? spotifyResults.map((artist: any) => ({
+    ? spotifyResults.map(artist => ({
         id: artist.name,
         name: artist.name,
         image: artist.image,
@@ -133,7 +133,7 @@ export default function PreferenceSelector({
             No results found for "{searchQuery}"
           </div>
         )}
-        {displayOptions.map((option) => (
+        {displayOptions.map((option: { id: string; name: string; image?: string }) => (
           <Card
             key={option.id}
             className={`p-4 cursor-pointer hover-elevate active-elevate-2 transition-all ${

@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import PreferenceSelector from "@/components/PreferenceSelector";
 import { ChevronRight } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,7 +17,43 @@ export default function Onboarding({ userId }: OnboardingProps) {
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedArtists, setSelectedArtists] = useState<string[]>([]);
   const [selectedVenues, setSelectedVenues] = useState<string[]>([]);
+  const [isImportingSpotify, setIsImportingSpotify] = useState(false);
   const { toast } = useToast();
+
+  const importSpotifyMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/spotify/top-artists?limit=100", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to import from Spotify");
+      }
+      return response.json();
+    },
+    onSuccess: (artists: Array<{ name: string }>) => {
+      const artistNames = artists.map(a => a.name);
+      setSelectedArtists(prev => {
+        const combined = [...new Set([...prev, ...artistNames])];
+        return combined;
+      });
+      toast({
+        title: "Success",
+        description: `Imported ${artists.length} artists from Spotify!`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to import from Spotify. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSpotifyImport = () => {
+    setIsImportingSpotify(true);
+    importSpotifyMutation.mutate();
+  };
 
   const totalSteps = 3;
   const progress = (step / totalSteps) * 100;
@@ -126,6 +162,8 @@ export default function Onboarding({ userId }: OnboardingProps) {
               options={mockArtists}
               selectedIds={selectedArtists}
               onSelectionChange={setSelectedArtists}
+              enableSpotifySearch={true}
+              onSpotifyImport={handleSpotifyImport}
             />
           )}
           {step === 3 && (
