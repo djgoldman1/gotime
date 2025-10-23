@@ -64,6 +64,14 @@ export default function PreferenceSelector({
 
   const { data: spotifyResults = [], isLoading: isSearching } = useQuery<Array<{ id: string; name: string; image?: string }>>({
     queryKey: ["/api/spotify/search/artists", debouncedQuery],
+    queryFn: async () => {
+      if (!debouncedQuery) return [];
+      const res = await fetch(`/api/spotify/search/artists?query=${encodeURIComponent(debouncedQuery)}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
+      return res.json();
+    },
     enabled: enableSpotifySearch && debouncedQuery.length > 0,
   });
 
