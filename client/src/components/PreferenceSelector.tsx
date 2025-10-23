@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +43,7 @@ export default function PreferenceSelector({
     options.forEach(option => map.set(option.id, option));
     return map;
   });
+  const [selectedItemsData, setSelectedItemsData] = useState<Map<string, PreferenceItem>>(new Map());
 
   useEffect(() => {
     setSelected(selectedIds);
@@ -81,11 +82,37 @@ export default function PreferenceSelector({
         option.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
+  // Create a stable combined map that includes options, Spotify results, selected items data
+  const allItemsMap = useMemo(() => {
+    const combined = new Map(itemsMap);
+    // Add Spotify results to the map
+    spotifyResults.forEach(result => {
+      combined.set(result.id, result);
+    });
+    // Add selected items data (persists even when search changes)
+    selectedItemsData.forEach((item, id) => {
+      combined.set(id, item);
+    });
+    return combined;
+  }, [itemsMap, spotifyResults, selectedItemsData]);
+
   const toggleSelection = (id: string, itemData?: PreferenceItem) => {
-    const newSelected = selected.includes(id)
+    const isCurrentlySelected = selected.includes(id);
+    const newSelected = isCurrentlySelected
       ? selected.filter((s) => s !== id)
       : [...selected, id];
     setSelected(newSelected);
+    
+    // Track selected items' data persistently
+    if (!isCurrentlySelected && itemData) {
+      setSelectedItemsData(prev => new Map(prev).set(id, itemData));
+    } else if (isCurrentlySelected) {
+      setSelectedItemsData(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(id);
+        return newMap;
+      });
+    }
     
     // Update the items map if we have new data
     if (itemData && !itemsMap.has(id)) {
@@ -93,9 +120,10 @@ export default function PreferenceSelector({
     }
     
     // Pass both IDs and the full items map to parent
-    const currentMap = itemData && !itemsMap.has(id)
-      ? new Map(itemsMap).set(id, itemData)
-      : itemsMap;
+    const currentMap = new Map(allItemsMap);
+    if (itemData && !currentMap.has(id)) {
+      currentMap.set(id, itemData);
+    }
     
     onSelectionChange?.(newSelected, currentMap);
   };
@@ -103,7 +131,7 @@ export default function PreferenceSelector({
   const isSelected = (id: string) => selected.includes(id);
 
   const getOptionForSelectedId = (id: string) => {
-    return itemsMap.get(id) || { id, name: id };
+    return allItemsMap.get(id) || { id, name: id };
   };
 
   return (

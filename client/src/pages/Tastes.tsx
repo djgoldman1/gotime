@@ -16,6 +16,7 @@ interface UserPreference {
   type: "team" | "artist" | "venue";
   itemId: string;
   itemName: string;
+  itemImage?: string;
 }
 
 export default function Tastes({ userId }: TastesProps) {
@@ -131,10 +132,11 @@ export default function Tastes({ userId }: TastesProps) {
         description: `Imported ${newArtists.length} new artists from Spotify!`,
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Spotify import error:", error);
       toast({
-        title: "Error",
-        description: "Failed to import from Spotify. Please try again.",
+        title: "Spotify Import Unavailable",
+        description: "This feature requires Spotify OAuth setup. The app owner needs to authorize their Spotify account in the Replit workspace first.",
         variant: "destructive",
       });
     },
@@ -160,6 +162,20 @@ export default function Tastes({ userId }: TastesProps) {
     { id: "Chance the Rapper", name: "Chance the Rapper" },
     { id: "Common", name: "Common" },
   ];
+
+  // Build artist options from saved preferences + mock artists (deduplicated)
+  const preferenceArtists = preferences
+    .filter(p => p.type === "artist")
+    .map(p => ({
+      id: p.itemId,
+      name: p.itemName,
+      image: p.itemImage,
+    }));
+  
+  const preferenceIds = new Set(preferenceArtists.map(a => a.id));
+  const uniqueMockArtists = mockArtists.filter(a => !preferenceIds.has(a.id));
+  
+  const artistOptions = [...uniqueMockArtists, ...preferenceArtists];
 
   const mockVenues = [
     { id: "United Center", name: "United Center" },
@@ -207,7 +223,7 @@ export default function Tastes({ userId }: TastesProps) {
             title="Your Favorite Artists"
             description="Artists and bands you'd like to see live"
             placeholder="Search artists..."
-            options={mockArtists}
+            options={artistOptions}
             selectedIds={selectedArtists}
             onSelectionChange={handleArtistsChange}
             enableSpotifySearch={true}
