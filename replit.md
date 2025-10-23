@@ -102,6 +102,7 @@ Preferred communication style: Simple, everyday language.
 - **Drizzle ORM**: Type-safe database toolkit
 - **connect-pg-simple**: PostgreSQL session store for secure sessions
 - **Ticketmaster Discovery API**: Real-time event data for Chicago area
+- **Spotify Web API**: Artist search and user's top artists for personalized music preferences
 
 ### Development Tools
 - **Replit Plugins**: Development banner, cartographer, and runtime error modal for Replit environment
@@ -179,9 +180,20 @@ Preferred communication style: Simple, everyday language.
 - Session userId validation (prevents unauthorized access)
 - Fixed onboarding preference submission (removed null itemImage issue)
 
+**7. Spotify Integration** (October 23, 2025 - Latest)
+- Integrated Spotify Web API via Replit connector for OAuth handling
+- Live artist search during onboarding using Spotify's catalog (300ms debounced)
+- "Import from Spotify" button fetches user's top 100 artists
+- Automatic deduplication with existing selections
+- Remote artist tracking in UI - searched/imported artists persist in badge list
+- Token caching with automatic refresh for performance
+- Loading states for search and import operations
+- Success/error toast notifications for user feedback
+
 ### 🎨 Current Features
 
 - **400+ Real Chicago Events** from Ticketmaster API
+- **Spotify Integration** for artist discovery and import
 - **Interactive Calendar** with day/week/month views
 - **Smart Filtering** by teams, artists, and venues
 - **Secure Authentication** with multiple OAuth providers
@@ -212,15 +224,19 @@ Preferred communication style: Simple, everyday language.
 - Consider adding caching for Ticketmaster API responses
 - Music filtering could be enhanced with genre-based filtering
 - Could add favorite/saved events feature
+- Monitor Spotify connector credential rotation in production logs
+- Consider persisting Spotify artist IDs alongside names for richer future features
 
 ### 🚀 Next Steps
 
 1. Connect to GitHub (when on desktop)
 2. Publish the app to production
 3. Set up GitHub Issues for bug tracking
-4. Consider adding:
+4. Monitor Spotify integration metrics (search/import success rates)
+5. Consider adding:
    - Event caching to reduce API calls
    - User favorites/bookmarks
    - Email notifications for upcoming events
    - Calendar export (iCal/Google Calendar)
    - Genre-based music filtering
+   - Spotify playlist creation from favorited events
