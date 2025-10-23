@@ -135,8 +135,8 @@ export default function Tastes({ userId }: TastesProps) {
     onError: (error: any) => {
       console.error("Spotify import error:", error);
       toast({
-        title: "Spotify Import Unavailable",
-        description: "This feature requires Spotify OAuth setup. The app owner needs to authorize their Spotify account in the Replit workspace first.",
+        title: "Spotify Import Restricted",
+        description: "Your Spotify account needs to be whitelisted in the app's Spotify Developer Dashboard. Contact the app owner to add your email address to the whitelist, or wait for the app to be approved for Extended Quota Mode.",
         variant: "destructive",
       });
     },
