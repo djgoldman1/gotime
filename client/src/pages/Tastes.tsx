@@ -30,10 +30,21 @@ export default function Tastes({ userId }: TastesProps) {
   });
 
   useEffect(() => {
-    setSelectedTeams(preferences.filter(p => p.type === "team").map(p => p.itemId));
-    setSelectedArtists(preferences.filter(p => p.type === "artist").map(p => p.itemId));
-    setSelectedVenues(preferences.filter(p => p.type === "venue").map(p => p.itemId));
-  }, [preferences]);
+    const teams = preferences.filter(p => p.type === "team").map(p => p.itemId);
+    const artists = preferences.filter(p => p.type === "artist").map(p => p.itemId);
+    const venues = preferences.filter(p => p.type === "venue").map(p => p.itemId);
+    
+    // Only update state if values actually changed (prevent render loop)
+    if (JSON.stringify(teams) !== JSON.stringify(selectedTeams)) {
+      setSelectedTeams(teams);
+    }
+    if (JSON.stringify(artists) !== JSON.stringify(selectedArtists)) {
+      setSelectedArtists(artists);
+    }
+    if (JSON.stringify(venues) !== JSON.stringify(selectedVenues)) {
+      setSelectedVenues(venues);
+    }
+  }, [preferences, selectedTeams, selectedArtists, selectedVenues]);
 
   const addPreferenceMutation = useMutation({
     mutationFn: async ({ type, itemId, itemName, itemImage }: { type: string; itemId: string; itemName: string; itemImage?: string }) => {
