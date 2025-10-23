@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, User, Calendar } from "lucide-react";
+import { Search, User, Calendar, Heart } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import { Link, useLocation } from "wouter";
 
 interface HeaderProps {
   onProfileClick?: () => void;
@@ -9,6 +10,8 @@ interface HeaderProps {
 }
 
 export default function Header({ onProfileClick, onLogoClick }: HeaderProps) {
+  const [location] = useLocation();
+
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
@@ -35,6 +38,26 @@ export default function Header({ onProfileClick, onLogoClick }: HeaderProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            <Link href="/">
+              <Button
+                variant={location === "/" ? "default" : "ghost"}
+                className="hidden sm:flex"
+                data-testid="button-nav-home"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Calendar
+              </Button>
+            </Link>
+            <Link href="/tastes">
+              <Button
+                variant={location === "/tastes" ? "default" : "ghost"}
+                className="hidden sm:flex"
+                data-testid="button-nav-tastes"
+              >
+                <Heart className="h-4 w-4 mr-2" />
+                Tastes
+              </Button>
+            </Link>
             <ThemeToggle />
             <Button
               variant="ghost"

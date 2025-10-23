@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Welcome from "@/pages/Welcome";
 import Home from "@/pages/Home";
 import Onboarding from "@/pages/Onboarding";
+import Tastes from "@/pages/Tastes";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={() => <Home userId={user.id} />} />
+      <Route path="/tastes" component={() => <Tastes userId={user.id} />} />
       <Route component={() => <Home userId={user.id} />} />
     </Switch>
   );
