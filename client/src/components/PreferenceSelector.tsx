@@ -22,6 +22,7 @@ interface PreferenceSelectorProps {
   enableSpotifySearch?: boolean;
   onSpotifyImport?: () => void;
   isImporting?: boolean;
+  hideBadges?: boolean;
 }
 
 export default function PreferenceSelector({
@@ -34,6 +35,7 @@ export default function PreferenceSelector({
   enableSpotifySearch = false,
   onSpotifyImport,
   isImporting = false,
+  hideBadges = false,
 }: PreferenceSelectorProps) {
   const [selected, setSelected] = useState<string[]>(selectedIds);
   const [searchQuery, setSearchQuery] = useState("");
@@ -172,7 +174,7 @@ export default function PreferenceSelector({
         )}
       </div>
 
-      {selected.length > 0 && (
+      {!hideBadges && selected.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selected.map((id) => {
             const option = getOptionForSelectedId(id);
@@ -205,29 +207,46 @@ export default function PreferenceSelector({
             No results found for "{searchQuery}"
           </div>
         )}
-        {displayOptions.map((option: { id: string; name: string; image?: string }) => (
-          <Card
-            key={option.id}
-            className={`p-4 cursor-pointer hover-elevate active-elevate-2 transition-all ${
-              isSelected(option.id) ? "ring-2 ring-primary" : ""
-            }`}
-            onClick={() => toggleSelection(option.id, option)}
-            data-testid={`card-preference-${option.id}`}
-          >
-            <div className="flex items-center gap-3">
-              {option.image && (
-                <img
-                  src={option.image}
-                  alt={option.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              )}
-              <div className="flex-1">
-                <div className="font-medium">{option.name}</div>
+        {displayOptions.map((option: { id: string; name: string; image?: string }) => {
+          const selected = isSelected(option.id);
+          return (
+            <Card
+              key={option.id}
+              className={`p-4 cursor-pointer hover-elevate active-elevate-2 transition-all ${
+                selected ? "ring-2 ring-primary" : ""
+              }`}
+              onClick={() => !selected && toggleSelection(option.id, option)}
+              data-testid={`card-preference-${option.id}`}
+            >
+              <div className="flex items-center gap-3">
+                {option.image && (
+                  <img
+                    src={option.image}
+                    alt={option.name}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                )}
+                <div className="flex-1">
+                  <div className="font-medium">{option.name}</div>
+                </div>
+                {hideBadges && selected && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSelection(option.id);
+                    }}
+                    data-testid={`button-remove-card-${option.id}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
