@@ -155,27 +155,14 @@ export default function Tastes({ userId }: TastesProps) {
     { id: "Chicago Fire FC", name: "Chicago Fire FC" },
   ];
 
-  const mockArtists = [
-    { id: "Spoon", name: "Spoon" },
-    { id: "The National", name: "The National" },
-    { id: "Wilco", name: "Wilco" },
-    { id: "Chance the Rapper", name: "Chance the Rapper" },
-    { id: "Common", name: "Common" },
-  ];
-
-  // Build artist options from saved preferences + mock artists (deduplicated)
-  const preferenceArtists = preferences
+  // Build artist options from saved preferences only
+  const artistOptions = preferences
     .filter(p => p.type === "artist")
     .map(p => ({
       id: p.itemId,
       name: p.itemName,
       image: p.itemImage,
     }));
-  
-  const preferenceIds = new Set(preferenceArtists.map(a => a.id));
-  const uniqueMockArtists = mockArtists.filter(a => !preferenceIds.has(a.id));
-  
-  const artistOptions = [...uniqueMockArtists, ...preferenceArtists];
 
   const mockVenues = [
     { id: "United Center", name: "United Center" },
