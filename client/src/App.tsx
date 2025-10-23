@@ -25,7 +25,7 @@ function Router() {
   }
 
   if (!user?.onboardingCompleted) {
-    return <Onboarding userId={user.id} />;
+    return <Onboarding userId={user!.id} />;
   }
 
   return (
