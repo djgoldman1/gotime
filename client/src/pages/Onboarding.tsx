@@ -68,14 +68,6 @@ export default function Onboarding({ userId }: OnboardingProps) {
     { id: "Chicago Fire FC", name: "Chicago Fire FC" },
   ];
 
-  const mockArtists = [
-    { id: "Spoon", name: "Spoon" },
-    { id: "The National", name: "The National" },
-    { id: "Wilco", name: "Wilco" },
-    { id: "Chance the Rapper", name: "Chance the Rapper" },
-    { id: "Common", name: "Common" },
-  ];
-
   const mockVenues = [
     { id: "United Center", name: "United Center" },
     { id: "Soldier Field", name: "Soldier Field" },
@@ -172,7 +164,7 @@ export default function Onboarding({ userId }: OnboardingProps) {
               title="Select Your Favorite Artists"
               description="Choose artists and bands you'd like to see live"
               placeholder="Search artists..."
-              options={mockArtists}
+              options={[]}
               selectedIds={selectedArtists}
               onSelectionChange={(ids, map) => {
                 setSelectedArtists(ids);
