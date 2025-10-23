@@ -191,9 +191,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/spotify/search/artists", isAuthenticated, async (req, res) => {
+  app.get("/api/spotify/search/artists/:query", isAuthenticated, async (req, res) => {
     try {
-      const query = req.query.q as string;
+      const query = req.params.query;
       if (!query || query.trim().length === 0) {
         return res.json([]);
       }

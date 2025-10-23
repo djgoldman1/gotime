@@ -235,21 +235,29 @@ Preferred communication style: Simple, everyday language.
 - Music filtering could be enhanced with genre-based filtering
 - Could add favorite/saved events feature
 
-### ✅ Spotify Integration Status
+### ⚠️ Spotify Integration Setup Required
 
-**Working Features:**
-- ✅ Artist search using Spotify's catalog (search API works perfectly)
+**Current Status:** Spotify connector is installed but needs authorization
+
+**To Enable Spotify Features:**
+1. You (the app owner) need to connect your personal Spotify account
+2. This authorizes the app to use Spotify's API on behalf of users
+3. Once authorized, both search and import features will work
+
+**How to Connect:**
+1. Try using the "Import from Spotify" button in the app
+2. You'll be redirected to Spotify to authorize the connection
+3. After authorizing, return to the app
+4. Both features will then work for all users
+
+**Features (Once Authorized):**
+- ✅ Artist search using Spotify's catalog
 - ✅ Live search results with 300ms debounce
+- ✅ Import user's top 100 Spotify artists
 - ✅ Artist data includes: id, name, image, genres, popularity
-- ✅ Replit Spotify connector properly configured
-- ✅ OAuth token management with auto-refresh
+- ✅ OAuth token auto-refresh
 
-**Import from Spotify:**
-- ⚠️ Requires user to connect their personal Spotify account
-- The "Import from Spotify" button will work once you connect your Spotify account
-- To connect: Use the application and authorize Spotify when prompted
-- After connecting, you can import your top 100 artists with one click
-- The search functionality works independently and doesn't require Spotify account connection
+**Technical Note:** The Replit Spotify connector uses OAuth, which requires the app owner's Spotify account to be connected before API calls will work. This is different from API key-based integrations.
 
 ### 🚀 Next Steps
 

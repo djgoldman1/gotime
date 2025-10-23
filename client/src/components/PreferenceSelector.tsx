@@ -52,11 +52,7 @@ export default function PreferenceSelector({
   });
 
   const displayOptions = enableSpotifySearch && searchQuery.length > 0 
-    ? spotifyResults.map(artist => ({
-        id: artist.name,
-        name: artist.name,
-        image: artist.image,
-      }))
+    ? spotifyResults
     : options.filter((option) =>
         option.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
