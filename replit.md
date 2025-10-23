@@ -1,296 +1,74 @@
 # GoTime - Chicago Event Discovery Platform
 
 ## Overview
-
-GoTime is a social calendar application focused on event discovery in Chicago. The platform provides personalized recommendations for sporting events, concerts, and entertainment, combining visual-first design with intelligent user preference tracking. Users can browse events through an intuitive calendar interface, save favorites, and receive recommendations based on their selected teams, artists, and venues.
+GoTime is a social calendar application focused on event discovery in Chicago. It provides personalized recommendations for sporting events, concerts, and entertainment through an intuitive calendar interface. Users can save favorites and receive recommendations based on their selected teams, artists, and venues, combining a visual-first design with intelligent preference tracking. The platform aims to offer a comprehensive solution for discovering and managing events, with future ambitions to expand features like event caching, user notifications, and calendar exports.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
 ### Frontend Architecture
-
-**Framework & Tooling**
-- React with TypeScript for type-safe component development
-- Vite as the build tool and development server
-- Wouter for lightweight client-side routing
-- TanStack React Query for server state management and data fetching
-
-**UI Component System**
-- Radix UI primitives for accessible, unstyled components
-- shadcn/ui component library (New York style variant)
-- Tailwind CSS for utility-first styling with extensive customization
-- Class Variance Authority (CVA) for component variant management
-
-**Design System**
-- Dark mode as primary theme with light mode support
-- Custom color palette: sports (blue), music (purple), success (green), warning (orange)
-- Inter font family via Google Fonts
-- Custom CSS variables for theming, elevation states, and button borders
-- Responsive design with mobile breakpoint at 768px
-
-**State Management**
-- React Query for asynchronous server state
-- Local component state with React hooks
-- No global state management library (intentionally kept simple)
+- **Frameworks**: React with TypeScript, Vite, Wouter for routing, TanStack React Query for server state.
+- **UI/UX**: Radix UI primitives, shadcn/ui (New York style), Tailwind CSS, Class Variance Authority (CVA).
+- **Design System**: Dark mode primary (with light mode support), custom color palette (sports: blue, music: purple), Inter font, responsive design (mobile breakpoint at 768px).
+- **State Management**: React Query for asynchronous server state, local component state with React hooks.
 
 ### Backend Architecture
-
-**Server Framework**
-- Express.js for HTTP server and API routing
-- Custom middleware for request logging and JSON body parsing
-- HTTP-only architecture (no WebSocket connections)
-
-**API Design Pattern**
-- RESTful endpoints under `/api` prefix
-- User-centric routes: `/api/user/:userId`, `/api/user/:userId/preferences`
-- Type-safe request/response handling with Zod validation
-- Consistent error handling with appropriate HTTP status codes
-
-**Data Layer**
-- Storage abstraction pattern (`IStorage` interface) for database operations
-- `DbStorage` implementation using Drizzle ORM
-- Separation of concerns: routes → storage layer → database
+- **Server**: Express.js for HTTP server and API routing.
+- **API Design**: RESTful endpoints (`/api` prefix), user-centric routes, Zod validation for type-safe requests/responses, consistent error handling.
+- **Data Layer**: Storage abstraction (`IStorage` interface) with `DbStorage` using Drizzle ORM, ensuring separation of concerns.
 
 ### Database Architecture
-
-**ORM & Database**
-- Drizzle ORM with PostgreSQL dialect
-- Neon serverless PostgreSQL via `@neondatabase/serverless`
-- WebSocket constructor configuration for serverless compatibility
-- Schema-first approach with `drizzle-zod` integration for runtime validation
-
-**Schema Design**
-- **users** table: Basic user info with onboarding completion tracking
-- **user_preferences** table: Flexible preference storage with type-based categorization (teams, artists, venues)
-- Cascade deletion on user preferences when users are removed
-- Auto-generated identity columns for primary keys
-
-**Migration Strategy**
-- Schema definitions in `shared/schema.ts` for frontend/backend sharing
-- Drizzle Kit for schema push and migration management
-- Database provisioning checked at startup with environment variable validation
+- **ORM & Database**: Drizzle ORM with PostgreSQL dialect, Neon serverless PostgreSQL, `drizzle-zod` for runtime validation.
+- **Schema**: `users` table, `user_preferences` table (teams, artists, venues), cascade deletion, identity columns for primary keys.
+- **Migration**: Drizzle Kit for schema push and migration, schema definitions shared via `shared/schema.ts`.
 
 ### Project Structure
+- **Monorepo**: `/client` (React frontend), `/server` (Express backend), `/shared` (shared types/schema).
+- **Build**: Vite for client, esbuild for server, single-command production start.
 
-**Monorepo Layout**
-- `/client` - React frontend with Vite
-- `/server` - Express backend
-- `/shared` - Shared TypeScript types and database schema
-- Path aliases: `@/` for client source, `@shared/` for shared code, `@assets/` for static assets
+### Key Architectural Decisions
+- **Express + Vite over Next.js**: For clear frontend/backend separation and direct control.
+- **Drizzle over Prisma**: For lighter weight, better TypeScript inference, and SQL-like query builder.
+- **Radix UI + Tailwind**: For maximum flexibility, customization, and accessibility.
+- **TanStack Query**: For declarative data fetching, caching, and simplified state management.
+- **No Authentication System (Initial MVP)**: Intentional for MVP, planned for future implementation. *Note: Authentication has since been implemented using Replit Auth.*
 
-**Build & Deployment**
-- Development: Concurrent Vite dev server with Express middleware mode
-- Production: Vite builds client to `dist/public`, esbuild bundles server to `dist`
-- Single-command start for production serving
+### Implemented Features
+- **Replit Auth Integration**: Secure authentication with OAuth (Google, GitHub, Apple, email/password), session management, user creation/upsert.
+- **Ticketmaster API Integration**: Fetches 400+ real Chicago events, intelligent filtering by user preferences, rate limiting.
+- **Smart Event Recommendation System**: Client-side filtering based on preferences, showing music events, team and venue-based filtering.
+- **Advanced Calendar Features**: Dynamic title formatting, context-aware navigation, quick reset to today's date, date-filtered recommendations, month-to-day drilldown.
+- **Database Schema**: Users, user preferences, and session tables with proper relationships and security.
+- **Security Fixes**: Authentication guards on user-specific routes, session userId validation.
+- **Spotify Integration**: Dual authentication strategy (Client Credentials for search, OAuth for import), live artist search (debounced), "Import from Spotify" (requires Extended Quota Mode approval), token caching.
+- **Tastes Management Page**: Dedicated `/tastes` page for post-onboarding preference management (teams, artists, venues), real-time updates, integrated Spotify.
 
 ## External Dependencies
 
 ### Third-Party UI Libraries
-- **Radix UI**: Comprehensive set of accessible component primitives (accordion, dialog, dropdown, popover, tabs, toast, tooltip, etc.)
-- **shadcn/ui**: Pre-built component implementations based on Radix UI
-- **Lucide React**: Icon library for consistent iconography
-- **cmdk**: Command palette component for search functionality
-- **date-fns**: Date manipulation and formatting
-- **react-day-picker**: Calendar date picker component
-- **Recharts**: Charting library (configured but not actively used)
+- **Radix UI**: Accessible component primitives.
+- **shadcn/ui**: Pre-built components.
+- **Lucide React**: Icon library.
+- **cmdk**: Command palette.
+- **date-fns**: Date manipulation.
+- **react-day-picker**: Calendar date picker.
+- **Recharts**: Charting library (configured).
 
 ### Database & Backend Services
-- **Neon**: Serverless PostgreSQL database provider
-- **Drizzle ORM**: Type-safe database toolkit
-- **connect-pg-simple**: PostgreSQL session store for secure sessions
-- **Ticketmaster Discovery API**: Real-time event data for Chicago area
-- **Spotify Web API**: Artist search and user's top artists for personalized music preferences
+- **Neon**: Serverless PostgreSQL database.
+- **Drizzle ORM**: Type-safe database toolkit.
+- **connect-pg-simple**: PostgreSQL session store.
+- **Ticketmaster Discovery API**: Real-time event data.
+- **Spotify Web API**: Artist search and user data.
 
 ### Development Tools
-- **Replit Plugins**: Development banner, cartographer, and runtime error modal for Replit environment
-- **TypeScript**: Full type coverage across client, server, and shared code
-- **ESBuild**: Fast bundling for production server code
-- **PostCSS**: CSS processing with Autoprefixer
+- **Replit Plugins**: Development banner, cartographer, runtime error modal.
+- **TypeScript**: Type coverage.
+- **ESBuild**: Fast bundling for server.
+- **PostCSS**: CSS processing.
 
 ### Design Assets
-- **Google Fonts**: Inter font family
-- **Generated Images**: Team logos and event imagery stored in `attached_assets/generated_images/`
-
-### Notable Architectural Decisions
-
-**Why Express + Vite instead of Next.js**: Provides clear separation between frontend and backend, simpler deployment model, and direct control over server middleware and routing.
-
-**Why Drizzle over Prisma**: Lighter weight, better TypeScript inference, SQL-like query builder that's closer to raw SQL for learning and control.
-
-**Why Radix UI + Tailwind**: Maximum flexibility and customization while maintaining accessibility standards. No opinionated styling framework lock-in.
-
-**Why TanStack Query**: Declarative data fetching with built-in caching, background refetching, and optimistic updates eliminates the need for complex state management.
-
-**No Authentication System**: Currently using simple user ID-based routing without session management or authentication. This is intentional for MVP phase but should be implemented before production.
-
-## Recent Development Session (October 23, 2025)
-
-### ✅ Completed Features
-
-**1. Replit Auth Integration**
-- Implemented secure authentication with OAuth support (Google, GitHub, Apple, email/password)
-- Users can log in without needing a Replit account
-- Session management with PostgreSQL-backed sessions
-- User creation/upsert during OAuth callback
-- Protected all user-specific API routes with authentication middleware
-
-**2. Ticketmaster API Integration**
-- Connected to Ticketmaster Discovery API
-- Fetching 400+ real Chicago events (200 sports + 200 music)
-- Intelligent filtering based on user preferences (teams, artists, venues)
-- Rate limiting protection with sequential API calls and delays
-- Event categorization (sports vs music)
-
-**3. Smart Event Recommendation System**
-- Fetch all Chicago events approach for maximum flexibility
-- Filter events client-side based on user preferences
-- Currently showing all music events (relaxed filtering for better discovery)
-- Team-based filtering working perfectly
-- Venue-based filtering
-
-**4. Advanced Calendar Features**
-- **Smart Date Navigation**: Dynamic title format based on view mode
-  - Day view: "Wed, October 23, 2025"
-  - Week view: "Oct 23-29, 2025"
-  - Month view: "October 2025"
-- **Context-Aware Navigation**: Arrows increment by day/week/month based on current view
-- **Logo Quick Reset**: Click GoTime logo to return to Week view with today's date
-- **Month-to-Day Drilldown**: Click date numbers in month view to switch to day view
-- **Date-Filtered Recommendations**: Recommended Events section automatically filters based on selected date range
-  - Day view shows only events on that specific day
-  - Week view shows events in that week
-  - Month view shows events in that month
-- Fixed date filtering - events now correctly match calendar dates
-- Month view: Click event icon to see detail popup
-- Larger event icons (6x6 pixels) in month view
-- Shows up to 6 events per day in month view
-- Removed color legend from month view for cleaner UI
-
-**5. Database Schema**
-- Users table with onboarding completion tracking
-- User preferences table (teams, artists, venues)
-- Proper cascade deletion
-- Session storage table
-
-**6. Security Fixes**
-- Added authentication guards to all user-specific routes
-- Session userId validation (prevents unauthorized access)
-- Fixed onboarding preference submission (removed null itemImage issue)
-
-**7. Spotify Integration** (October 23, 2025 - FULLY WORKING)
-- **Dual Authentication Strategy:**
-  - Client Credentials flow for public artist search (uses SPOTIFY_CLIENT_ID/SECRET)
-  - OAuth flow for "Import from Spotify" feature (uses Replit connector - requires app owner auth)
-- **Live Artist Search:**
-  - 300ms debounced search using Spotify's full artist catalog
-  - Custom queryFn with URL encoding to handle special characters (AC/DC, etc.)
-  - Query parameter API route: `/api/spotify/search/artists?query=...`
-  - Saves complete artist data: id (Spotify ID), name (human-readable), image (Spotify CDN URL)
-- **"Import from Spotify" Feature:**
-  - Fetches user's top 100 artists (requires Spotify OAuth - development mode)
-  - Automatic deduplication with existing selections
-  - Currently limited to whitelisted users due to Replit connector dev mode
-- **Technical Implementation:**
-  - PreferenceSelector component passes Maps with complete item data (id, name, image)
-  - Both Onboarding and Tastes pages properly save artist names and images
-  - Token caching with automatic refresh for performance
-  - Loading states and error handling with toast notifications
-
-**8. Tastes Management Page** (October 23, 2025 - Latest)
-- Created dedicated `/tastes` page for managing preferences post-onboarding
-- Users can add/remove teams, artists, and venues anytime
-- Real-time updates with automatic cache invalidation
-- Spotify integration available on Tastes page
-- Navigation integrated in app header (Calendar and Tastes buttons)
-- All changes immediately reflected in event recommendations
-- Proper itemId/itemName handling for data consistency
-
-### 🎨 Current Features
-
-- **400+ Real Chicago Events** from Ticketmaster API
-- **Spotify Integration** for artist discovery and import
-- **Tastes Management** - dedicated page to update preferences anytime
-- **Interactive Calendar** with day/week/month views
-- **Smart Filtering** by teams, artists, and venues
-- **Secure Authentication** with multiple OAuth providers
-- **Beautiful Dark Mode** design
-- **Responsive Layout** works on all devices
-
-### 🔔 IMPORTANT REMINDERS
-
-**⚠️ TO DO WHEN ON DESKTOP:**
-
-1. **CONNECT TO GITHUB** 
-   - Open Git pane (left sidebar)
-   - Click "Create new repository on GitHub"
-   - Name: `gotime`
-   - Description: "Intelligent event discovery and calendar web app for Chicago"
-   - Commit message: "Initial commit - GoTime MVP with Ticketmaster integration"
-   - This enables issue tracking and collaboration
-
-2. **PUBLISH THE APP**
-   - Click "Publish" or "View Deployments" button
-   - Choose "Autoscale" deployment type
-   - Get public URL (gotime.replit.app)
-   - Share with anyone - no Replit account required!
-
-### 📋 Known Issues to Track
-
-- EventDetailModal missing description attribute (accessibility warning)
-- Consider adding caching for Ticketmaster API responses
-- Music filtering could be enhanced with genre-based filtering
-- Could add favorite/saved events feature
-
-### 🎵 Spotify Integration Status
-
-**Currently Active:**
-- ✅ **Artist Search:** Live search using Spotify's full catalog (300ms debounced)
-- ✅ **Replit Connector:** OAuth authentication configured and working
-- ✅ **Data Quality:** Artist data includes id, name, image, genres, popularity
-
-**Currently Disabled:**
-- ⏸️ **"Import from Spotify" Button:** Hidden until Spotify approves Extended Quota Mode
-
-**Why is Import Disabled?**
-The Spotify app is in Development Mode, which limits API access to whitelisted users only. To avoid confusing users with 403 errors, the import feature is behind a feature flag.
-
-**How to Enable "Import from Spotify" for Everyone:**
-
-1. **Request Extended Quota Mode** (through Spotify, not Replit):
-   - Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
-   - Click on your Spotify app
-   - Click "Request Extended Quota Mode" or "Request Quota Extension"
-   - Fill out the form explaining your use case
-   - Submit and wait for approval (typically a few days)
-
-2. **Enable the Feature Flag** (once Spotify approves):
-   - Open the Replit Secrets tab (🔒 in left sidebar)
-   - Add new secret: `VITE_ENABLE_SPOTIFY_IMPORT` = `true`
-   - Restart the app
-   - The "Import from Spotify" button will now appear!
-
-**Alternative (Not Recommended):**
-You can whitelist up to 25 users in Development Mode via the Spotify dashboard → User Management. However, this doesn't scale and other users will see errors.
-
-**Technical Details:**
-- Artist search uses Client Credentials flow (no user auth needed)
-- Import feature uses OAuth flow (requires Extended Quota Mode)
-- OAuth tokens auto-refresh via Replit connector
-- All authentication handled server-side for security
-
-### 🚀 Next Steps
-
-1. Connect to GitHub (when on desktop)
-2. Publish the app to production
-3. Set up GitHub Issues for bug tracking
-4. Monitor Spotify integration metrics (search/import success rates)
-5. Consider adding:
-   - Event caching to reduce API calls
-   - User favorites/bookmarks
-   - Email notifications for upcoming events
-   - Calendar export (iCal/Google Calendar)
-   - Genre-based music filtering
-   - Spotify playlist creation from favorited events
+- **Google Fonts**: Inter font family.
+- **Generated Images**: Team logos and event imagery.
