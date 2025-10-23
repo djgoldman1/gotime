@@ -150,13 +150,23 @@ Preferred communication style: Simple, everyday language.
 - Team-based filtering working perfectly
 - Venue-based filtering
 
-**4. Calendar Improvements**
+**4. Advanced Calendar Features**
+- **Smart Date Navigation**: Dynamic title format based on view mode
+  - Day view: "Wed, October 23, 2025"
+  - Week view: "Oct 23-29, 2025"
+  - Month view: "October 2025"
+- **Context-Aware Navigation**: Arrows increment by day/week/month based on current view
+- **Logo Quick Reset**: Click GoTime logo to return to Week view with today's date
+- **Month-to-Day Drilldown**: Click date numbers in month view to switch to day view
+- **Date-Filtered Recommendations**: Recommended Events section automatically filters based on selected date range
+  - Day view shows only events on that specific day
+  - Week view shows events in that week
+  - Month view shows events in that month
 - Fixed date filtering - events now correctly match calendar dates
-- Month view: Click date number to jump to Day view
 - Month view: Click event icon to see detail popup
 - Larger event icons (6x6 pixels) in month view
 - Shows up to 6 events per day in month view
-- Proper date parsing and comparison logic
+- Removed color legend from month view for cleaner UI
 
 **5. Database Schema**
 - Users table with onboarding completion tracking

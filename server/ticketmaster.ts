@@ -255,7 +255,7 @@ export class TicketmasterAPI {
         eventTitle.includes(team.toLowerCase())
       ) || false;
       
-      // For now, show all music events (no artist filtering)
+      // Show all music events (no artist filtering for better discovery)
       const isMusic = event.category === "music";
       
       // Check if event matches any venue preference

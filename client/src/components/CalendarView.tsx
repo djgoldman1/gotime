@@ -25,15 +25,27 @@ interface CalendarEvent {
 interface CalendarViewProps {
   events?: CalendarEvent[];
   onEventClick?: (eventId: string) => void;
+  viewMode?: ViewMode;
+  currentDate?: Date;
+  onViewChange?: (viewMode: ViewMode, currentDate: Date) => void;
 }
 
-export default function CalendarView({ events = [], onEventClick }: CalendarViewProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>("week");
-  const [currentDate, setCurrentDate] = useState(new Date());
+export default function CalendarView({ 
+  events = [], 
+  onEventClick, 
+  viewMode: externalViewMode = "week",
+  currentDate: externalCurrentDate = new Date(),
+  onViewChange 
+}: CalendarViewProps) {
+  const viewMode = externalViewMode;
+  const currentDate = externalCurrentDate;
 
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekDaysShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const monthNames = ["January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"];
+  const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   const getWeekDates = () => {
     const week = [];
@@ -48,10 +60,51 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
     return week;
   };
 
-  const navigateWeek = (direction: "prev" | "next") => {
+  const navigate = (direction: "prev" | "next") => {
     const newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getDate() + (direction === "next" ? 7 : -7));
-    setCurrentDate(newDate);
+    
+    if (viewMode === "day") {
+      newDate.setDate(currentDate.getDate() + (direction === "next" ? 1 : -1));
+    } else if (viewMode === "week") {
+      newDate.setDate(currentDate.getDate() + (direction === "next" ? 7 : -7));
+    } else if (viewMode === "month") {
+      newDate.setMonth(currentDate.getMonth() + (direction === "next" ? 1 : -1));
+    }
+    
+    onViewChange?.(viewMode, newDate);
+  };
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    onViewChange?.(mode, currentDate);
+  };
+
+  const handleDayClick = (date: Date) => {
+    onViewChange?.("day", date);
+  };
+
+  const getNavigationTitle = () => {
+    if (viewMode === "day") {
+      const dayName = weekDaysShort[currentDate.getDay()];
+      const monthName = monthNames[currentDate.getMonth()];
+      const day = currentDate.getDate();
+      const year = currentDate.getFullYear();
+      return `${dayName}, ${monthName} ${day}, ${year}`;
+    } else if (viewMode === "week") {
+      const weekDates = getWeekDates();
+      const startDate = weekDates[0];
+      const endDate = weekDates[6];
+      const startMonth = monthNamesShort[startDate.getMonth()];
+      const endMonth = monthNamesShort[endDate.getMonth()];
+      const year = endDate.getFullYear();
+      
+      if (startDate.getMonth() === endDate.getMonth()) {
+        return `${startMonth} ${startDate.getDate()}-${endDate.getDate()}, ${year}`;
+      } else {
+        return `${startMonth} ${startDate.getDate()} - ${endMonth} ${endDate.getDate()}, ${year}`;
+      }
+    } else {
+      return `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+    }
   };
 
   const isToday = (date: Date) => {
@@ -91,19 +144,19 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigateWeek("prev")}
-            data-testid="button-prev-week"
+            onClick={() => navigate("prev")}
+            data-testid="button-prev"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <h2 className="text-2xl font-semibold" data-testid="text-current-month">
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          <h2 className="text-2xl font-semibold" data-testid="text-current-date">
+            {getNavigationTitle()}
           </h2>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigateWeek("next")}
-            data-testid="button-next-week"
+            onClick={() => navigate("next")}
+            data-testid="button-next"
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
@@ -115,7 +168,7 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
               key={mode}
               variant={viewMode === mode ? "default" : "outline"}
               size="sm"
-              onClick={() => setViewMode(mode)}
+              onClick={() => handleViewModeChange(mode)}
               data-testid={`button-view-${mode}`}
               className="capitalize"
             >
@@ -242,16 +295,6 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
 
       {viewMode === "month" && (
         <div className="space-y-4">
-          <div className="flex items-center gap-4 px-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-sports"></div>
-              <span className="text-sm text-muted-foreground">Sports</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-music"></div>
-              <span className="text-sm text-muted-foreground">Music</span>
-            </div>
-          </div>
           <div className="border rounded-lg p-4">
             <div className="grid grid-cols-7 gap-2">
               {weekDays.map((day) => (
@@ -279,10 +322,8 @@ export default function CalendarView({ events = [], onEventClick }: CalendarView
                   >
                     <div 
                       className="text-sm font-medium mb-1 cursor-pointer hover:text-primary"
-                      onClick={() => {
-                        setCurrentDate(new Date(cellDate));
-                        setViewMode("day");
-                      }}
+                      onClick={() => handleDayClick(new Date(cellDate))}
+                      data-testid={`button-day-${cellDate.getDate()}`}
                     >
                       {cellDate.getDate()}
                     </div>
