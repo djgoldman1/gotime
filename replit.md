@@ -180,15 +180,24 @@ Preferred communication style: Simple, everyday language.
 - Session userId validation (prevents unauthorized access)
 - Fixed onboarding preference submission (removed null itemImage issue)
 
-**7. Spotify Integration** (October 23, 2025)
-- Integrated Spotify Web API via Replit connector for OAuth handling
-- Live artist search during onboarding using Spotify's catalog (300ms debounced)
-- "Import from Spotify" button fetches user's top 100 artists
-- Automatic deduplication with existing selections
-- Remote artist tracking in UI - searched/imported artists persist in badge list
-- Token caching with automatic refresh for performance
-- Loading states for search and import operations
-- Success/error toast notifications for user feedback
+**7. Spotify Integration** (October 23, 2025 - FULLY WORKING)
+- **Dual Authentication Strategy:**
+  - Client Credentials flow for public artist search (uses SPOTIFY_CLIENT_ID/SECRET)
+  - OAuth flow for "Import from Spotify" feature (uses Replit connector - requires app owner auth)
+- **Live Artist Search:**
+  - 300ms debounced search using Spotify's full artist catalog
+  - Custom queryFn with URL encoding to handle special characters (AC/DC, etc.)
+  - Query parameter API route: `/api/spotify/search/artists?query=...`
+  - Saves complete artist data: id (Spotify ID), name (human-readable), image (Spotify CDN URL)
+- **"Import from Spotify" Feature:**
+  - Fetches user's top 100 artists (requires Spotify OAuth - development mode)
+  - Automatic deduplication with existing selections
+  - Currently limited to whitelisted users due to Replit connector dev mode
+- **Technical Implementation:**
+  - PreferenceSelector component passes Maps with complete item data (id, name, image)
+  - Both Onboarding and Tastes pages properly save artist names and images
+  - Token caching with automatic refresh for performance
+  - Loading states and error handling with toast notifications
 
 **8. Tastes Management Page** (October 23, 2025 - Latest)
 - Created dedicated `/tastes` page for managing preferences post-onboarding
