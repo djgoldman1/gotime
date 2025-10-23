@@ -217,6 +217,7 @@ export default function Tastes({ userId }: TastesProps) {
             options={mockTeams}
             selectedIds={selectedTeams}
             onSelectionChange={handleTeamsChange}
+            hideBadges={true}
           />
 
           <PreferenceSelector
@@ -229,6 +230,7 @@ export default function Tastes({ userId }: TastesProps) {
             enableSpotifySearch={true}
             onSpotifyImport={handleSpotifyImport}
             isImporting={importSpotifyMutation.isPending}
+            hideBadges={true}
           />
 
           <PreferenceSelector
@@ -238,6 +240,7 @@ export default function Tastes({ userId }: TastesProps) {
             options={mockVenues}
             selectedIds={selectedVenues}
             onSelectionChange={handleVenuesChange}
+            hideBadges={true}
           />
         </div>
       </div>
