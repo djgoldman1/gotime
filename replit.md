@@ -72,3 +72,14 @@ Preferred communication style: Simple, everyday language.
 ### Design Assets
 - **Google Fonts**: Inter font family.
 - **Generated Images**: Team logos and event imagery.
+
+## Recent Bug Fixes
+
+### Tastes Page Preference Deletion (October 23, 2025)
+- **Fixed "sticky preferences" bug** where teams, artists, and venues would reappear after deletion on the Tastes page
+- **Root cause:** Tastes page was combining mock suggestion arrays with saved preferences, so deleted items would reappear as "suggestions"
+- **Solution:** 
+  - Updated Tastes page to only show saved preferences (removed mock arrays from options)
+  - Kept mock suggestions in onboarding for better UX during initial setup
+  - Added guards to useEffect to prevent unnecessary state updates and render loops
+- **Result:** All preferences (teams, artists, venues) can now be permanently deleted without reappearing or causing React warnings
