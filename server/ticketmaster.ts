@@ -255,16 +255,19 @@ export class TicketmasterAPI {
         eventTitle.includes(team.toLowerCase())
       ) || false;
       
-      // For now, show all music events (no artist filtering)
+      // Show all music events (no artist filtering for better discovery)
       const isMusic = event.category === "music";
+      
+      // Show all sports events (no team filtering for better discovery)
+      const isSports = event.category === "sports";
       
       // Check if event matches any venue preference
       const matchesVenue = preferences.venues?.some(venue => 
         eventVenue.includes(venue.toLowerCase())
       ) || false;
       
-      // Return true if matches team preference OR is music OR matches venue
-      return matchesTeam || isMusic || matchesVenue;
+      // Return true if matches team preference OR is any music/sports event OR matches venue
+      return matchesTeam || isMusic || isSports || matchesVenue;
     });
 
     console.log(`Filtered to ${filteredEvents.length} events based on preferences`);
